@@ -1,5 +1,5 @@
-#include "utils/assert/assert.hpp" // Your ASSERT / ASSERT_MSG macros
-#include "utils/log/logger.hpp"
+#include "utils/assertions.hpp" // Your ASSERT / ASSERT_MSG macros
+#include "utils/logger.hpp"
 
 #include <cstdlib>
 #include <string>

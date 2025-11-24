@@ -25,8 +25,7 @@ function(enable_iwyu_for_target target)
     return()
   endif()
 
-  # Add additional IWYU flags here
-  # Example: mapping files, stdlib mappings, etc.
+  # Add additional IWYU flags here (mapping files, etc.)
   set(iwyu_args
       "${IWYU_EXECUTABLE}"
       # Example extra args (uncomment/adjust as needed):
@@ -36,6 +35,20 @@ function(enable_iwyu_for_target target)
 
   message(STATUS "Enabling IWYU for target '${target}'")
 
-  # Use target property so we can enable it per-target, not globally
+  # Enable IWYU per-target via property
   set_property(TARGET ${target} PROPERTY CXX_INCLUDE_WHAT_YOU_USE "${iwyu_args}")
 endfunction()
+
+# Optional global helper target: runs IWYU over all TUs via iwyu_tool.py
+if(ENABLE_IWYU AND IWYU_EXECUTABLE)
+  find_program(PYTHON_EXECUTABLE NAMES python3 python)
+
+  if(PYTHON_EXECUTABLE)
+    add_custom_target(
+      iwyu-all
+      COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/iwyu_tool.py -p ${CMAKE_BINARY_DIR}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      COMMENT "Running IWYU over all translation units"
+      )
+  endif()
+endif()

@@ -1,28 +1,27 @@
-# --- Project Setup ---
 set(TEST_NAME project_template_tests)
-
-project(
-  ${TEST_NAME}
-  VERSION 0.1
-  LANGUAGES CXX
-  )
+# Expose TEST_NAME to the parent scope so top-level CMakeLists.txt can use it
+set(TEST_NAME
+    ${TEST_NAME}
+    PARENT_SCOPE
+    )
 
 # -----------------------------
-# Additional Dependencies
+# GoogleTest
 # -----------------------------
-fetchcontent_declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-  DOWNLOAD_NO_PROGRESS TRUE
-  )
-fetchcontent_makeavailable(googletest)
+find_package(GTest CONFIG REQUIRED)
 
 # -----------------------------
 # Unit Tests Executable
 # -----------------------------
-add_executable(${TEST_NAME} unit_tests_main.cpp)
+add_executable(
+  ${TEST_NAME} example.test.cpp unit_tests_main.cpp # add more test sources here, e.g.:
+  )
 
-target_link_libraries(${TEST_NAME} PRIVATE GTest::gtest)
+target_link_libraries(
+  ${TEST_NAME}
+  PRIVATE GTest::gtest
+          # GTest::gtest_main          # only if you want the default main instead of your own
+  )
 
 # -----------------------------
 # GoogleTest Discovery

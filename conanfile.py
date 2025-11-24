@@ -20,6 +20,7 @@ class Pkg(ConanFile):
 
     # Conan dependencies (ConanCenter)
     requires = (
+        "gtest/1.17.0",
         "benchmark/1.9.4",
         "spdlog/1.13.0",
         "magic_enum/0.9.5",
@@ -91,12 +92,9 @@ class Pkg(ConanFile):
         self.folders.generators = "generators"
 
     def generate(self):
-        # Toolchain (presets etc.)
         tc = CMakeToolchain(self)
-        # Generate a Conan-specific presets file that you can include from your main CMakePresets.json
-        tc.user_presets_path = "ConanPresets.json"
+        tc.user_presets_path = False
         tc.generate()
 
-        # Dependency config files for find_package()
         deps = CMakeDeps(self)
         deps.generate()
