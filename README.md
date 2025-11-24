@@ -35,6 +35,17 @@ conan profile detect
 - **ci-debug**: Debug; tests on; `ENABLE_WARNINGS_AS_ERRORS=ON`.
   -> *Strict CI configuration for static analysis, compile warnings, and tests.*
 
+# Code coverage
+
+To generate a code coverage report run from the project root:
+
+```bash
+
+cmake --preset coverage
+cmake --build --preset coverage --target coverage
+```
+
+Then open `build/coverage/coverage_report/index.html`
 
 
 # Run benchmark target
