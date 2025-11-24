@@ -1,0 +1,49 @@
+# === Ignore any directory containing 'build' in its name ===
+**/*build*/
+
+# === CLion-specific ===
+.idea/
+*.iml
+
+# === Generated files ===
+CMakeFiles/
+CMakeCache.txt
+Makefile
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# === Executables / binaries ===
+*.out
+*.o
+*.a
+*.so
+*.exe
+*.dll
+
+# === Python virtualenv ===
+.venv/
+
+# === Precompiled headers and other cache ===
+*.pch
+*.pdb
+
+# === Logs / temporary ===
+*.log
+*.tmp
+
+# === Test outputs ===
+test_output/
+*.gcda
+*.gcno
+*.gcov
+
+# === OS-generated files ===
+.DS_Store
+Thumbs.db
+
+# === Generated Documentation ===
+docs/
+
+# === Compressed files ===
+*.zip
