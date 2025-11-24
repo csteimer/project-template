@@ -1,0 +1,64 @@
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+IndentCaseLabels: true
+
+# Line length
+ColumnLimit: 120
+
+# Short constructs
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# Braces
+BreakBeforeBraces: Attach
+
+# Pointer/reference alignment
+PointerAlignment: Left
+AlignConsecutiveDeclarations: false
+AlignConsecutiveAssignments: true
+AlignTrailingComments: true
+
+SortIncludes: CaseInsensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # gtest and gmock first
+  - Regex: "^\"gtest/gtest\\.h\"$"
+    Priority: -3
+  - Regex: "^\"gmock/gmock\\.h\"$"
+    Priority: -2
+
+  # Project headers — all quoted .hpp or .h files
+  - Regex: "^\".*\\.(hpp|h)\"$"
+    Priority: 10
+
+  # Third-party headers in angle brackets with extension (e.g. <boost/something.hpp>)
+  - Regex: "^<.*\\.(h|hpp|hxx)>$"
+    Priority: 1000
+
+  # Standard library headers in angle brackets (e.g. <vector>, <string>)
+  - Regex: "^<[a-z0-9_]+>$"
+    Priority: 100000
+
+  # Catch-all (optional fallback)
+  - Regex: ".*"
+    Priority: 200000
+
+# Constructor initializer lists
+ConstructorInitializerIndentWidth: 2
+
+# Spaces
+SpacesInParentheses: false
+SpaceBeforeParens: ControlStatements  # `if (` vs `if(`
+SpacesInAngles: false  # `<int>` not `< int >`
+SpaceAfterCStyleCast: true
+
+# Other
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortCaseLabelsOnASingleLine: false
+IndentExternBlock: AfterExternBlock

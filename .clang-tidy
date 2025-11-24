@@ -1,0 +1,67 @@
+Checks: >-
+  -*,
+  readability-identifier-naming,
+  readability-braces-around-statements,
+  readability-non-const-parameter,
+  readability-const-return-type,
+  readability-qualified-auto,
+  readability-redundant-control-flow,
+  readability-redundant-declaration,
+  readability-simplify-boolean-expr,
+  readability-string-compare,
+  readability-use-anyofallof,
+  readability-named-parameter,
+  readability-function-size,
+  readability-inconsistent-declaration-parameter-name,
+  cppcoreguidelines-virtual-class-destructor,
+  modernize-*,
+  performance-*,
+  bugprone-*,
+  boost-*,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers,
+  -modernize-use-default-member-init,
+  -bugprone-use-after-move,
+  -bugprone-unused-return-value,
+  -bugprone-suspicious-string-compare,
+  -bugprone-suspicious-include,
+  -bugprone-infinite-loop,
+  -bugprone-assert-side-effect,
+  -bugprone-multiple-statement-macro
+CheckOptions:
+  - key: readability-identifier-naming.ConceptCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: _
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.TemplateTemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeTemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.ValueTemplateParameterCase
+    value: lower_case
+  - key: misc-assert-side-effect.CheckFunctionCalls
+    value: 1
+  - key: misc-assert-side-effect.AssertMacros
+    value: 'assert'
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 3
+WarningsAsErrors: >-
+  bugprone-reserved-identifier,
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-const-return-type,
+  readability-identifier-naming,
+  readability-inconsistent-declaration-parameter-name,
+  cppcoreguidelines-virtual-class-destructor

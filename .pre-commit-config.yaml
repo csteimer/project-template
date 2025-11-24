@@ -1,0 +1,50 @@
+fail_fast: false
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+        name: Don't commit to main
+
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: clang-format
+        # Uses the .clang-format in the repo root
+        args: [ --style=file, -i ]
+      - id: clang-tidy
+        args:
+          - -p=build/debug
+          - -fix
+          - -fix-errors
+        # Run only when invoked manually:
+        #   pre-commit run clang-tidy --hook-stage manual
+        stages: [manual]
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1
+    hooks:
+      - id: typos
+        name: Check for typos in code
+        types_or: [ c++, c, python, cmake, shell ]
+      - id: typos
+        name: Check for typos in documentation
+        types_or: [ markdown ]
+        stages: [manual]
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.11.0
+    hooks:
+      - id: black
+        name: Format python
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-format
+        name: Format cmake
+        args: [ --config, cmake/.cmake-format.yaml, --in-place ]
+        additional_dependencies: [ pyyaml>=5.1 ]

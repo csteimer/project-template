@@ -1,0 +1,13 @@
+[settings]
+os=Linux
+arch=x86_64
+build_type=Debug
+compiler=gcc
+compiler.version=13
+compiler.cppstd=20
+compiler.libcxx=libstdc++11
+
+[buildenv]
+CXXFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+CFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+LDFLAGS="-fsanitize=address,undefined"
