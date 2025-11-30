@@ -1,6 +1,7 @@
 pre-commit
-include-what-you-use
-ccache
-googletest
-googlebenchmark
+cpplint
+black
+clang-format
+cmakelang
+gcovr
 conan
