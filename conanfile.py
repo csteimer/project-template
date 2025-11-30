@@ -44,7 +44,7 @@ import subprocess
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.files import copy, save
-from conan.tools.env import Environment, VirtualBuildEnv
+from conan.tools.env import Environment
 
 
 class Pkg(ConanFile):
@@ -182,9 +182,6 @@ class Pkg(ConanFile):
             tc.cache_variables["BUILD_TESTING"] = "OFF"
             tc.cache_variables["CMAKE_INTERPROCEDURAL_OPTIMIZATION"] = "ON"
             tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "OFF"
-
-        # --- Sanitizer handling (asan, tsan, msan) ---
-        sanitizer = str(self.options.sanitizer)
 
         # Sanitizers and coverage usually don't mix; coverage is controlled separately below.
         # We keep BUILD_COVERAGE off by default here and adjust via enable_coverage.
