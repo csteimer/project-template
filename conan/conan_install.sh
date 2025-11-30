@@ -3,7 +3,7 @@ set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
     echo "Usage: $0 <profile> [extra conan args...]"
-    echo "Known profiles: debug, release, asan, tsan, coverage, benchmark, ci-debug, all"
+    echo "Known profiles: debug, release, asan, tsan, coverage, benchmark, iwyu, ci-debug, all"
     exit 1
 fi
 
@@ -49,6 +49,11 @@ run_conan_for_profile() {
         BUILD_DIR="build/benchmark"
         ;;
 
+      iwyu)
+        PROFILE_HOST="gcc-debug"
+        BUILD_DIR="build/iwyu"
+        ;;
+
       ci-debug)
         PROFILE_HOST="gcc-debug"
         BUILD_DIR="build/ci-debug"
@@ -74,7 +79,7 @@ run_conan_for_profile() {
 
 if [[ "${PRESET}" == "all" ]]; then
     # List of all supported profiles (except "all" itself)
-    PRESETS=(debug release asan tsan coverage benchmark ci-debug)
+    PRESETS=(debug release asan tsan coverage benchmark iwyu ci-debug)
     for p in "${PRESETS[@]}"; do
         run_conan_for_profile "${p}" "${EXTRA_ARGS[@]}"
         echo

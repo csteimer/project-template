@@ -106,9 +106,15 @@
       "binaryDir": "${sourceDir}/build/iwyu",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ENABLE_IWYU": "ON"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/iwyu/generators/conan_toolchain.cmake",
+        "BUILD_TESTING": "ON",
+        "BUILD_BENCHMARKS": "OFF",
+        "BUILD_COVERAGE": "OFF",
+        "ENABLE_IWYU": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
-    },
+    }
+,
     {
       "name": "ci-debug",
       "displayName": "CI Debug",
