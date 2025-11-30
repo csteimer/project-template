@@ -6,3 +6,7 @@ compiler=gcc
 compiler.version=13
 compiler.cppstd=20
 compiler.libcxx=libstdc++11
+
+[options]
+project-template/*:sanitizer=none
+project-template/*:cmake_presets_name=debug

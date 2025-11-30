@@ -11,3 +11,7 @@ compiler.libcxx=libstdc++11
 CXXFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer"
 CFLAGS="-fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer"
 LDFLAGS="-fsanitize=memory -fsanitize-memory-track-origins"
+
+[options]
+project-template/*:sanitizer=msan
+project-template/*:cmake_presets_name=msan

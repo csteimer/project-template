@@ -11,3 +11,7 @@ compiler.libcxx=libstdc++11
 CXXFLAGS="-fsanitize=thread"
 CFLAGS="-fsanitize=thread"
 LDFLAGS="-fsanitize=thread"
+
+[options]
+project-template/*:sanitizer=tsan
+project-template/*:cmake_presets_name=tsan

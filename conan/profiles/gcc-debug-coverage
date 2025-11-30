@@ -12,3 +12,8 @@ tools.build:cxxflags=["-O0","-g","--coverage"]
 tools.build:cflags=["-O0","-g","--coverage"]
 tools.build:sharedlinkflags=["--coverage"]
 tools.build:exelinkflags=["--coverage"]
+
+[options]
+project-template/*:sanitizer=none
+project-template/*:cmake_presets_name=coverage
+project-template/*:enable_coverage=True

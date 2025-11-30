@@ -1,7 +1,7 @@
 [settings]
 os=Linux
 arch=x86_64
-build_type=Release
+build_type=Debug
 compiler=gcc
 compiler.version=13
 compiler.cppstd=20
@@ -9,4 +9,5 @@ compiler.libcxx=libstdc++11
 
 [options]
 project-template/*:sanitizer=none
-project-template/*:cmake_presets_name=release
+project-template/*:enable_iwyu=True
+project-template/*:cmake_presets_name=iwyu

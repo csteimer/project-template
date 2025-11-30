@@ -11,3 +11,7 @@ compiler.libcxx=libstdc++11
 CXXFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
 CFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
 LDFLAGS="-fsanitize=address,undefined"
+
+[options]
+project-template/*:sanitizer=asan
+project-template/*:cmake_presets_name=asan

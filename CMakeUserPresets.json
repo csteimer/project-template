@@ -1,0 +1,138 @@
+{
+  "version": 4,
+
+  "include": [
+    "ConanPresets.json"
+  ],
+
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "cmake_presets_name_debug-debug",
+      "binaryDir": "build/debug"
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "cmake_presets_name_release-release",
+      "binaryDir": "build/release"
+    },
+    {
+      "name": "asan",
+      "displayName": "ASAN",
+      "inherits": "cmake_presets_name_asan-debug",
+      "binaryDir": "build/asan"
+    },
+    {
+      "name": "tsan",
+      "displayName": "TSAN",
+      "inherits": "cmake_presets_name_tsan-debug",
+      "binaryDir": "build/tsan"
+    },
+    {
+      "name": "msan",
+      "displayName": "MSAN",
+      "inherits": "cmake_presets_name_msan-debug",
+      "binaryDir": "build/msan"
+    },
+    {
+      "name": "coverage",
+      "displayName": "Coverage",
+      "inherits": "cmake_presets_name_coverage-debug",
+      "binaryDir": "build/coverage"
+    },
+    {
+      "name": "benchmarks",
+      "displayName": "Benchmarks",
+      "inherits": "cmake_presets_name_benchmarks-release",
+      "binaryDir": "build/benchmarks"
+    },
+    {
+      "name": "iwyu",
+      "displayName": "IWYU",
+      "inherits": "cmake_presets_name_iwyu-debug",
+      "binaryDir": "build/iwyu"
+    },
+    {
+      "name": "ci-debug",
+      "displayName": "CI Debug",
+      "inherits": "cmake_presets_name_ci-debug-debug",
+      "binaryDir": "build/ci-debug"
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan"
+    },
+    {
+      "name": "msan",
+      "configurePreset": "msan"
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage"
+    },
+    {
+      "name": "benchmarks",
+      "configurePreset": "benchmarks"
+    },
+    {
+      "name": "iwyu",
+      "configurePreset": "iwyu"
+    },
+    {
+      "name": "ci-debug",
+      "configurePreset": "ci-debug"
+    }
+  ],
+
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan"
+    },
+    {
+      "name": "msan",
+      "configurePreset": "msan"
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage"
+    },
+    {
+      "name": "benchmarks",
+      "configurePreset": "benchmarks"
+    },
+    {
+      "name": "iwyu",
+      "configurePreset": "iwyu"
+    },
+    {
+      "name": "ci-debug",
+      "configurePreset": "ci-debug"
+    }
+  ]
+}
