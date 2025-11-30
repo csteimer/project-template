@@ -78,7 +78,7 @@ class Pkg(ConanFile):
     )
 
     options = {
-        "sanitizer": ["none", "asan", "tsan", "msan"],
+        "sanitizer": ["none", "asan", "tsan"],
         "enable_benchmarks": [True, False],
         "enable_coverage": [True, False],
         "enable_iwyu": [True, False],
@@ -87,7 +87,6 @@ class Pkg(ConanFile):
             "debug",
             "release",
             "asan",
-            "msan",
             "tsan",
             "coverage",
             "benchmarks",
@@ -182,9 +181,6 @@ class Pkg(ConanFile):
             tc.cache_variables["BUILD_TESTING"] = "OFF"
             tc.cache_variables["CMAKE_INTERPROCEDURAL_OPTIMIZATION"] = "ON"
             tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "OFF"
-
-        # Sanitizers and coverage usually don't mix; coverage is controlled separately below.
-        # We keep BUILD_COVERAGE off by default here and adjust via enable_coverage.
 
         # --- Coverage toggle (independent of sanitizer) ---
         if bool(self.options.enable_coverage):

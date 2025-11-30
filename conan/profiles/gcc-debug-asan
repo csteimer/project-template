@@ -8,9 +8,9 @@ compiler.cppstd=20
 compiler.libcxx=libstdc++11
 
 [buildenv]
-CXXFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
-CFLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
-LDFLAGS="-fsanitize=address,undefined"
+CXXFLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer
+CFLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer
+LDFLAGS=-fsanitize=address,undefined
 
 [options]
 project-template/*:sanitizer=asan
