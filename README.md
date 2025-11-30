@@ -281,7 +281,7 @@ project-template/<version>
 
 Version is determined by:
 
-1. If `MYLIB_VERSION` is set → use it
+1. If `PKG_VERSION` is set → use it
 2. Else if `HEAD` is exactly on a Git tag → use the tag
 3. Else → version = `latest`
 
