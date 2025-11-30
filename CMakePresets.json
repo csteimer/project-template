@@ -77,6 +77,9 @@
       "generator": "Ninja",
       "description": "Debug build with coverage instrumentation and tests",
       "binaryDir": "${sourceDir}/build/coverage",
+      "environment": {
+        "PATH": "${sourceDir}/.venv/bin:$penv{PATH}"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/coverage/generators/conan_toolchain.cmake",
@@ -113,8 +116,7 @@
         "ENABLE_IWYU": "ON",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
-    }
-,
+    },
     {
       "name": "ci-debug",
       "displayName": "CI Debug",
