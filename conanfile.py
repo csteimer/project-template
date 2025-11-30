@@ -2,12 +2,12 @@ import os
 import subprocess
 
 from conan import ConanFile
-from conan.tools.cmake import CMakeToolchain, CMakeDeps, cmake_layout
+from conan.tools.cmake import CMakeToolchain, CMakeDeps
 
 
 class Pkg(ConanFile):
     name = "project-template"
-    version = None
+    version = None  # This is set automatically by set_version
     settings = "os", "arch", "compiler", "build_type"
     exports_sources = (
         "CMakeLists.txt",
@@ -37,9 +37,8 @@ class Pkg(ConanFile):
         Versioning rules:
         1. If env var MYLIB_VERSION is set -> use that verbatim.
         2. Otherwise:
-           - Use the latest reachable tag as base version.
-           - If HEAD is not exactly on that tag, append '.latest'.
-        3. If no tags exist at all -> use '0.0.0.latest'.
+           - If HEAD is exactly on a tag -> use that tag as the version.
+           - Otherwise -> use 'latest'.
         """
         # 1) Explicit override from environment (optional but handy in CI)
         env_version = os.getenv("MYLIB_VERSION")
@@ -47,22 +46,7 @@ class Pkg(ConanFile):
             self.version = env_version
             return
 
-        # 2) Try to get the latest reachable tag
-        try:
-            latest_tag = (
-                subprocess.check_output(
-                    ["git", "describe", "--tags", "--abbrev=0"],
-                    stderr=subprocess.DEVNULL,
-                )
-                .decode()
-                .strip()
-            )
-        except Exception:
-            # No tags or not a git repo
-            self.version = "0.0.0.latest"
-            return
-
-        # 3) Check whether HEAD is exactly at that tag
+        # 2) Check whether HEAD is exactly at some tag
         try:
             exact_tag = (
                 subprocess.check_output(
@@ -72,17 +56,11 @@ class Pkg(ConanFile):
                 .decode()
                 .strip()
             )
-            on_tag = exact_tag == latest_tag
+            # If this succeeds, we're on a tagged commit
+            self.version = exact_tag
         except Exception:
-            # Not exactly on any tag
-            on_tag = False
-
-        if on_tag:
-            # Tagged commit -> plain tag as version
-            self.version = latest_tag
-        else:
-            # Non-tag commit -> latest tag + '.latest'
-            self.version = f"{latest_tag}.latest"
+            # Not exactly on any tag, or not a git repo -> generic 'latest'
+            self.version = "latest"
 
     def layout(self):
         # Use the output folder (-of) directly as the build folder.
