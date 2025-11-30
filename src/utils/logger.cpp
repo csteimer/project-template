@@ -1,5 +1,7 @@
 #include "logger.hpp"
 
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 namespace project_template::utils::log {
 
 // definitions of our statics
