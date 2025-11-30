@@ -48,3 +48,6 @@ docs/
 
 # === Compressed files ===
 *.zip
+
+# === User specific files
+CMakeUserPresets.json

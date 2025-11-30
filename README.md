@@ -1,174 +1,331 @@
-# Setup
+# Project Template
+
+A modern, modular C++ project template using **Conan 2**, **CMakePresets**, **GoogleTest**, **Google Benchmark**, **sanitizers**, **code coverage**, and a unified **logging + assertion** system.
+
+This template provides:
+
+- Reproducible builds with Conan profiles
+- Strict CMake configuration and toolchain integration
+- Presets for debug, sanitizers, coverage, CI, and benchmarks
+- Unified logging (spdlog) and assertion utilities
+- Doxygen documentation integration
+- Benchmark comparison tooling
+- Optional Include-What-You-Use (IWYU) analysis
+- Automated Conan package versioning with Git tag + commit tracking
+
+---
+
+# 1. Setup
 
 ```bash
-
 ./setup_dev_env.sh
 source .venv/bin/activate
 conan profile detect
 ```
 
-# CMake Presets and Conan Profiles
+This sets up:
 
-| CMake Preset | CMAKE_BUILD_TYPE | Sanitizers / Options          | binaryDir       | Suggested Conan Host Profile |
-|--------------|-------------------|------------------------------|-----------------|------------------------------|
-| debug        | Debug             | none                         | build/debug     | gcc-debug                    |
-| release      | Release           | none                         | build/release   | gcc-release                  |
-| asan         | Debug             | ASAN + UBSAN                 | build/asan      | gcc-debug-asan               |
-| tsan         | Debug             | TSAN                         | build/tsan      | gcc-debug-tsan               |
-| coverage     | Debug             | coverage instrumentation     | build/coverage  | gcc-debug-coverage           |
-| benchmark    | Release           | benchmarks only              | build/benchmark     | gcc-release-benchmark        |
-| ci-debug     | Debug             | Werror                       | build/ci-debug  | gcc-debug or gcc-debug-ci    |
+- A Python virtual environment
+- Development tools for formatting, Doxygen, coverage, plotting, etc.
+- Conan profiles for reproducible builds
 
-#### What each preset is for:
-- **debug**: Debug; warnings on; tests on; no sanitizers; no coverage.
-  -> Default preset for everyday hacking.
-- **release**: Release; LTO on (`CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON`); tests off.
-  -> For real binaries and packaging.
-- **asan**: Debug; `ENABLE_ASAN=ON`, `ENABLE_UBSAN=ON`; tests on.
-  -> Use with `target_enable_sanitizers()` to catch UB and memory bugs.
-- **tsan**: Debug; `ENABLE_TSAN=ON`; tests on.
-  -> For multithreading race detection.
-- **coverage**: Debug; `BUILD_COVERAGE=ON`; tests on.
-  -> Works with your gcovr-based coverage target.
-- **benchmark**: Release; `BUILD_BENCHMARKS=ON`; tests off.
-  -> Builds benchmarks and enables `run-benchmarks`.
-- **ci-debug**: Debug; tests on; `ENABLE_WARNINGS_AS_ERRORS=ON`.
-  -> *Strict CI configuration for static analysis, compile warnings, and tests.*
+---
 
-# Code coverage
+# 2. CMake User Presets
 
-To generate a code coverage report run from the project root:
+CMake allows separation between **project-defined presets** (`cmake/CMakePresets.json`)
+and **user-defined overrides** (`CMakeUserPresets.json`).
+
+To keep the repository clean and customizable, create a `CMakeUserPresets.json` file in the project root:
+
+```json
+{
+  "version": 4,
+
+  "include": [
+    "cmake/CMakePresets.json"
+  ],
+
+  "configurePresets": [],
+  "buildPresets": [],
+  "testPresets": []
+}
+```
+
+This file:
+- Inherits 100% of the presets from `cmake/CMakePresets.json`
+- Allows developers to add local presets without modifying project files
+
+---
+
+# 3. CMake Presets and Conan Profiles
+
+| CMake Preset | CMAKE_BUILD_TYPE | Sanitizers / Options      | binaryDir         | Suggested Host Profile     |
+|--------------|------------------|---------------------------|-------------------|-----------------------------|
+| debug        | Debug            | none                      | build/debug       | gcc-debug                  |
+| release      | Release          | none                      | build/release     | gcc-release                |
+| asan         | Debug            | ASAN + UBSAN              | build/asan        | gcc-debug-asan             |
+| tsan         | Debug            | TSAN                      | build/tsan        | gcc-debug-tsan             |
+| coverage     | Debug            | coverage instrumentation  | build/coverage    | gcc-debug-coverage         |
+| benchmark    | Release          | benchmarks only           | build/benchmark   | gcc-release-benchmark      |
+| ci-debug     | Debug            | Werror                    | build/ci-debug    | gcc-debug or gcc-debug-ci  |
+
+## What each preset does
+
+### **debug**
+- Standard development configuration
+- Warnings enabled, tests enabled
+- No sanitizers or coverage overhead
+  **Use this for everyday development.**
+
+### **release**
+- Optimized build with LTO
+  **Use for product-ready binaries and packaging.**
+
+### **asan**
+- AddressSanitizer + UndefinedBehaviorSanitizer
+  **Use to catch memory errors and undefined behavior.**
+
+### **tsan**
+- ThreadSanitizer
+  **Use to detect multithreading race conditions.**
+
+### **coverage**
+- `BUILD_COVERAGE=ON` + gcov instrumentation
+  **Use to generate coverage HTML reports.**
+
+### **benchmark**
+- Only benchmarks enabled
+- Provides `run-benchmarks` aggregate target
+  **Use for performance regression testing.**
+
+### **ci-debug**
+- Warnings-as-errors enabled
+- Debug + tests
+  **Use for CI pipelines.**
+
+---
+
+# 4. Building the Project
+
+Example:
 
 ```bash
+cmake --preset debug
+cmake --build --preset debug
+```
 
+Run tests:
+
+```bash
+ctest --test-dir build/debug --output-on-failure
+```
+
+---
+
+# 5. Code Coverage
+
+```bash
 cmake --preset coverage
 cmake --build --preset coverage --target coverage
 ```
 
-Then open `build/coverage/coverage_report/index.html`
+Open:
 
-
-# Run benchmark target
-
-Typical usage:
 ```
-# run with defaults (BUILD_DIR=build/benchmark, PRESET=benchmark)
-./tools/run_benchmarks.sh
+build/coverage/coverage_report/index.html
+```
 
-# or explicitly:
+---
+
+# 6. Running Benchmarks
+
+```bash
+./tools/run_benchmarks.sh
+```
+
+Explicit build directory:
+
+```bash
 BUILD_DIR=build/benchmark PRESET=benchmark ./tools/run_benchmarks.sh
 ```
 
-### Create a comparison plot of a target against a baseline
-Combined with the Python script, a typical manual workflow might be:
-1. Run baseline (e.g. on main branch)
-```
+## Benchmark comparison workflow
+
+### 1. Generate baseline on main
+
+```bash
 git checkout main
 ./tools/run_benchmarks.sh
-cp build/benchmark/example_benchmark_bench.json build/benchmark/example_benchmark_baseline.json
+cp build/benchmark/example_benchmark_bench.json    build/benchmark/example_benchmark_baseline.json
 ```
 
-1. Switch to feature branch and run benchmarks again
-```
+### 2. Switch to feature branch
+
+```bash
 git checkout feature/my-change
 ./tools/run_benchmarks.sh
 ```
 
-1. Compare and plot
+### 3. Compare and plot
+
+```bash
+./tools/plot_benchmark_compare.py   --baseline build/benchmark/example_benchmark_baseline.json   --current  build/benchmark/example_benchmark_bench.json   --output   build/benchmark/benchmark_compare.png
 ```
-./tools/plot_benchmark_compare.py --baseline build/benchmark/example_benchmark_baseline.json --current build/benchmark/example_benchmark_bench.json --output build/benchmark/benchmark_compare.png
-```
 
-## Generate Documentation
+---
 
-This project uses **Doxygen** to generate code documentation.
+# 7. Documentation Generation (Doxygen)
 
-```console
+```bash
 doxygen
 xdg-open docs/html/index.html
 ```
 
-## Generate Code Coverage
+---
 
-```console
-cmake --build --preset coverage
-xdg-open build/debug/coverage_report/index.html
-```
+# 8. Logging System
 
-## Logging
+The project provides a unified logging wrapper around **spdlog**.
 
-This project provides a unified logging wrapper around **spdlog**, plus a small assertion system
-(`ASSERT` / `ASSERT_MSG`) that integrates directly with the logger.
-
-### Initializing the Logger
-
-You must initialize the logger once, typically in `main.cpp`:
+## Initialization
 
 ```cpp
 #include "utils/log/logger.hpp"
 
-using project_template::utils::log::Level;
-using project_template::utils::log::Log;
-using project_template::utils::log::Mode;
-
 int main() {
     Log::init(
-        Level::Debug,         // minimum level to display
-        Mode::Async,          // or Mode::Sync for unit tests
-        "[%T.%f] [%^%l%$] %v" // log pattern (timestamps, colors, message)
+        Level::Debug,
+        Mode::Async,
+        "[%T.%f] [%^%l%$] %v"
     );
 }
 ```
 
-### Sync vs Async mode
+## Logging macros
 
-- `Mode::Sync` -> logging happens on the calling thread. Useful for deterministic unit tests.
-- `Mode::Async` -> logging is queued and processed by a worker thread. Best for fast runtime behavior.
-- `Log::reset_logger()` and `Log::flush()` ensure all logs are written before shutdown.
-
-### Logging Macros
-All macros automatically prepend the filename and line number to the message:
-```c++
-#include "logger.hpp"
-...
+```cpp
 LOG_TRACE("Starting system init");
-LOG_DEBUG("Value of x: {}", x);
-LOG_INFO("Loaded config '{}'", config_path);
-LOG_WARN("Low memory: {} MB remaining", free_mb);
-LOG_ERROR("Cannot open file '{}'", filename);
-LOG_CRITICAL("Unexpected state encountered");
+LOG_DEBUG("X = {}", x);
+LOG_INFO("Loaded '{}'", file);
+LOG_WARN("Low memory: {} MB", free_mb);
+LOG_ERROR("Failed to open '{}'", filename);
+LOG_CRITICAL("Unexpected state!");
 ```
-These expand to calls like:
-```console
+
+Example output:
+
+```
 [23:04:05.123456] [info] [main.cpp@line:42] Loaded config 'settings.json'
 ```
 
-### Clean Shutdown
+## Clean shutdown
 
-To ensure no messages are lost in async mode:
-```c++
+```cpp
 Log::flush();
-Log::reset_logger();   // also shuts down spdlog's thread pool
+Log::reset_logger();
 ```
 
-## Assertions
+---
 
-The project provides `ASSERT` and `ASSERT_MSG`:
-```c++
-#include "utils/assert/assert.hpp"
+# 9. Assertions
 
+```cpp
 ASSERT(x == 10);
-ASSERT_MSG(y != 0, "Invalid divisor: y = {} must not be zero!", y);
+ASSERT_MSG(y != 0, "Invalid divisor y = {}", y);
 ```
-Behavior:
-- In Release builds (NDEBUG) -> assertions are disabled
-- In Debug builds:
-  - A failing assertion logs via LOG_CRITICAL
-  - All logs are flushed
-  - spdlog is shut down
-  - The program aborts
 
-Example failure output:
-```console
-[12:45:17.983211] [critical] [math.cpp@line:88] Assertion failed: 'y != 0' at math.cpp:88 -- Invalid divisor: y = 0 must not be zero!
+### Debug build behavior
+- Logs `LOG_CRITICAL`
+- Flushes logs
+- Shuts down spdlog thread pool
+- Aborts program
+
+---
+
+# 10. Conan Package Creation
+
+This project supports full `conan create` workflows.
+
+## Build a package
+
+```bash
+conan create . --profile:host=conan/profiles/gcc-release
 ```
+
+Included in the package:
+
+- `lib/`, `bin/` artifacts
+- `include/` headers
+- `licenses/`
+- `metadata/git_commit.txt`
+- Conan metadata
+- Auto-generated version number
+
+## Install the package locally
+
+```bash
+conan install project-template/<version>@
+```
+
+Or in another project:
+
+```ini
+[requires]
+project-template/<version>
+```
+
+---
+
+# 11. Versioning: Git-Driven Automatic Versioning
+
+Version is determined by:
+
+1. If `MYLIB_VERSION` is set → use it
+2. Else if `HEAD` is exactly on a Git tag → use the tag
+3. Else → version = `latest`
+
+Commit hash is stored in:
+
+```
+metadata/git_commit.txt
+```
+
+---
+
+# 12. Include-What-You-Use (IWYU)
+
+Enable with:
+
+```bash
+cmake --preset iwyu
+```
+
+Run:
+
+```bash
+cmake --build --preset iwyu --target iwyu-all
+```
+
+---
+
+# 13. Repository Structure
+
+```
+project-template/
+  ├── src/
+  ├── tests/
+  ├── cmake/
+  ├── conan/
+  ├── tools/
+  ├── docs/
+  ├── CMakeLists.txt
+  ├── CMakeUserPresets.json
+  ├── conanfile.py
+  ├── README.md
+  └── ...
+```
+
+---
+
+Enjoy building clean, maintainable C++ software!
