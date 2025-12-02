@@ -79,7 +79,7 @@ class Pkg(ConanFile):
 
     options = {
         "sanitizer": ["none", "asan", "tsan"],
-        "enable_benchmarks": [True, False],
+        "enable_benchmark": [True, False],
         "enable_coverage": [True, False],
         "enable_iwyu": [True, False],
         "ci_debug": [True, False],
@@ -89,7 +89,7 @@ class Pkg(ConanFile):
             "asan",
             "tsan",
             "coverage",
-            "benchmarks",
+            "benchmark",
             "iwyu",
             "ci-debug",
         ],
@@ -98,7 +98,7 @@ class Pkg(ConanFile):
     # Specify spdlog as header-only
     default_options = {
         "sanitizer": "none",
-        "enable_benchmarks": False,
+        "enable_benchmark": False,
         "enable_coverage": False,
         "enable_iwyu": False,
         "ci_debug": False,
@@ -166,7 +166,7 @@ class Pkg(ConanFile):
         # Common CMake cache variables
         tc.cache_variables["CMAKE_BUILD_TYPE"] = build_type
         tc.cache_variables["BUILD_TESTING"] = "ON"
-        tc.cache_variables["BUILD_BENCHMARKS"] = "OFF"
+        tc.cache_variables["BUILD_BENCHMARK"] = "OFF"
         tc.cache_variables["BUILD_COVERAGE"] = "OFF"
         tc.cache_variables["ENABLE_WARNINGS"] = "ON"
         tc.cache_variables["ENABLE_WARNINGS_AS_ERRORS"] = "OFF"
@@ -190,8 +190,8 @@ class Pkg(ConanFile):
 
         # --- Benchmarks toggle ---
         # When enabled, we always build benchmarks and typically don't need tests.
-        if bool(self.options.enable_benchmarks):
-            tc.cache_variables["BUILD_BENCHMARKS"] = "ON"
+        if bool(self.options.enable_benchmark):
+            tc.cache_variables["BUILD_BENCHMARK"] = "ON"
             tc.cache_variables["BUILD_TESTING"] = "OFF"
             # Having compile_commands.json is often useful when tuning benchmarks
             tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "ON"

@@ -86,12 +86,12 @@ function(add_benchmark_aggregate_target)
     )
 
   foreach(exec IN LISTS bench_execs)
-    # Write benchmark output to <target>_bench.json next to binary
+    # Write benchmark output to <target>_bench.json next to the binary
     set(out_file "${exec}_bench.json")
 
     add_custom_command(
       TARGET run-benchmarks
-      APPEND
+      POST_BUILD
       COMMAND $<TARGET_FILE:${exec}> --benchmark_format=json --benchmark_out=${out_file}
       COMMAND ${CMAKE_COMMAND} -E echo "✔ Finished benchmark: ${exec} -> ${out_file}"
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

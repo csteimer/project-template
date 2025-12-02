@@ -9,5 +9,5 @@ compiler.libcxx=libstdc++11
 
 [options]
 project-template/*:sanitizer=none
-project-template/*:enable_benchmarks=True
-project-template/*:cmake_presets_name=benchmarks
+project-template/*:enable_benchmark=True
+project-template/*:cmake_presets_name=benchmark

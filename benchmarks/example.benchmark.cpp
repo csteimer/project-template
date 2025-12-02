@@ -1,4 +1,4 @@
-#include "sum.hpp"
+#include "example.hpp"
 
 #include <benchmark/benchmark.h>
 

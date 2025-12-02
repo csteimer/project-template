@@ -69,7 +69,7 @@ Summary
 -------
 
 All actual build behavior (CMAKE_BUILD_TYPE, sanitizers, coverage, IWYU,
-benchmarks, CI flags, etc.) is defined in the Conan recipe and profiles.
+benchmark, CI flags, etc.) is defined in the Conan recipe and profiles.
 
 This script only:
 

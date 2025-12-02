@@ -37,10 +37,10 @@
       "binaryDir": "build/coverage"
     },
     {
-      "name": "benchmarks",
-      "displayName": "Benchmarks",
-      "inherits": "cmake_presets_name_benchmarks-release",
-      "binaryDir": "build/benchmarks"
+      "name": "benchmark",
+      "displayName": "Benchmark",
+      "inherits": "cmake_presets_name_benchmark-release",
+      "binaryDir": "build/benchmark"
     },
     {
       "name": "iwyu",
@@ -78,8 +78,8 @@
       "configurePreset": "coverage"
     },
     {
-      "name": "benchmarks",
-      "configurePreset": "benchmarks"
+      "name": "benchmark",
+      "configurePreset": "benchmark"
     },
     {
       "name": "iwyu",
@@ -109,8 +109,8 @@
       "configurePreset": "coverage"
     },
     {
-      "name": "benchmarks",
-      "configurePreset": "benchmarks"
+      "name": "benchmark",
+      "configurePreset": "benchmark"
     },
     {
       "name": "iwyu",

@@ -1,4 +1,4 @@
-#include "sum.hpp"
+#include "example.hpp"
 
 namespace benchmark_example {
 
