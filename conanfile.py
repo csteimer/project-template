@@ -152,7 +152,7 @@ class Pkg(ConanFile):
 
         # Specify the name of the auto generate file that contains the paths to the
         # individual CMakePresets.json in the build subdirectories
-        tc.user_presets_path = "ConanPresets.json"
+        tc.user_presets_path = "ConanGeneratedCMakePresets.json"
 
         # --- Add the local .venv to PATH so tools like gcovr are found---
         venv_bin = os.path.join(self.source_folder, ".venv", "bin")

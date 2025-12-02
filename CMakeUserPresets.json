@@ -2,7 +2,7 @@
   "version": 4,
 
   "include": [
-    "ConanPresets.json"
+    "ConanGeneratedCMakePresets.json"
   ],
 
   "configurePresets": [

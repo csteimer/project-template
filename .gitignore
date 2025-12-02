@@ -12,7 +12,7 @@ Makefile
 compile_commands.json
 CTestTestfile.cmake
 Testing/
-ConanPresets.json
+ConanGeneratedCMakePresets.json
 
 # === Executables / binaries ===
 *.out
