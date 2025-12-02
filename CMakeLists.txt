@@ -61,5 +61,5 @@ endif()
 
 # --- Benchmarks ---
 if(BUILD_BENCHMARKS)
-  target_add_benchmark(example_benchmark benchmarks/benchmark_example.cpp)
+  add_subdirectory(benchmarks)
 endif()

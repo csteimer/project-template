@@ -9,7 +9,7 @@
 #   include(EnableBenchmarks)
 #
 #   if(BUILD_BENCHMARKS)
-#       target_add_benchmark(example_benchmark benchmarks/benchmark_example.cpp)
+#       target_add_benchmark(example_benchmarks benchmarks/example_benchmark.cpp)
 #       # ... add more ...
 #       add_benchmark_aggregate_target()
 #   endif()
