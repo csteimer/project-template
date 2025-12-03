@@ -1,14 +1,50 @@
-# Reusable helper to configure a compiler cache (ccache/sccache).
+# --------------------------------------------------------------------------------------------------
+# EnableCcache.cmake
 #
-# Usage in top-level CMakeLists.txt:
+# This module configures a **compiler cache** (e.g. `ccache` or `sccache`) as the compiler launcher
+# for C and C++ targets in your project.
 #
-#   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-#   include(EnableCcache)
+# It is designed to be:
+#   - Opt-in / opt-out via a cache variable
+#   - Safe in superproject / toolchain setups (won't override an existing launcher)
+#   - Flexible enough to support both `ccache` and `sccache`
 #
-#   # Optionally override:
-#   #   -DENABLE_CCACHE=OFF
-#   #   -DCCACHE_LAUNCHER=/usr/bin/sccache
+# Configuration variables:
 #
+#   ENABLE_CCACHE  (BOOL, default: ON)
+#       Controls whether a compiler cache should be configured at all.
+#       Can be set by Conan, CMakePresets, or manually:
+#
+#           -DENABLE_CCACHE=OFF
+#
+#   CCACHE_LAUNCHER (FILEPATH)
+#       Explicit path to the compiler cache program (e.g. `/usr/bin/ccache` or `/usr/bin/sccache`).
+#       If left empty, the module will try to `find_program()` one of:
+#           - ccache
+#           - sccache
+#
+# Behavior:
+#   - If ENABLE_CCACHE=OFF              -> no launcher is configured.
+#   - If a compiler launcher is already set (CMAKE_*_COMPILER_LAUNCHER), it is **not** overwritten.
+#   - Otherwise, a launcher is discovered or taken from CCACHE_LAUNCHER and set globally:
+#         CMAKE_C_COMPILER_LAUNCHER
+#         CMAKE_CXX_COMPILER_LAUNCHER
+#   - Adds a convenience target:
+#
+#         compiler-cache-stats
+#
+#     which calls `<launcher> -s` to show cache statistics.
+#
+# Minimal usage in your top-level CMakeLists.txt:
+#
+#     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+#     include(EnableCcache)
+#
+#     # Optional overrides:
+#     #   cmake -DENABLE_CCACHE=OFF ...
+#     #   cmake -DCCACHE_LAUNCHER=/usr/bin/sccache ...
+#
+# --------------------------------------------------------------------------------------------------
 
 # Only define the option if not already defined (allows superprojects/toolchains to control it).
 if(NOT DEFINED ENABLE_CCACHE)

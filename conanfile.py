@@ -14,7 +14,7 @@ Key points:
         - Select binary-compatible prebuilt packages
         - Rebuild dependencies when needed for a given configuration
         - Generate a CMake toolchain with matching flags
-        - Keep binaries reproducible across profiles/presets
+        - Keep binaries reproducible across profiles.
 
 - exports_sources:
     Files that are exported into the recipe’s source folder. This includes
@@ -44,7 +44,6 @@ import subprocess
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.files import copy, save
-from conan.tools.env import Environment
 
 
 class Pkg(ConanFile):
@@ -77,31 +76,9 @@ class Pkg(ConanFile):
         "benchmark/1.9.4",
     )
 
-    options = {
-        "sanitizer": ["none", "asan", "tsan"],
-        "enable_benchmark": [True, False],
-        "enable_coverage": [True, False],
-        "enable_iwyu": [True, False],
-        "ci_debug": [True, False],
-        "cmake_presets_name": [
-            "debug",
-            "release",
-            "asan",
-            "tsan",
-            "coverage",
-            "benchmark",
-            "iwyu",
-            "ci-debug",
-        ],
-    }
-
-    # Specify spdlog as header-only
+    # No project-specific options at the moment.
+    # We only configure options of requirements (e.g. spdlog) here.
     default_options = {
-        "sanitizer": "none",
-        "enable_benchmark": False,
-        "enable_coverage": False,
-        "enable_iwyu": False,
-        "ci_debug": False,
         "spdlog/*:header_only": True,
     }
 
@@ -136,75 +113,58 @@ class Pkg(ConanFile):
             self.version = "latest"
 
     def layout(self):
+        """
+        Layout for both `conan install -of <dir>` and `conan create`.
+
+        - For `conan install . -of build/<preset>`:
+            * build folder is that output folder (.)
+            * generators live in build/<preset>/generators
+        - For `conan create`, Conan will use its own cache build folder,
+          and this layout still applies inside that folder.
+        """
         # Use the output folder (-of) directly as the build folder.
-        # So if we call `-of build/debug`, this becomes the actual build dir.
         self.folders.build = "."
         # Put all Conan-generated files (toolchain, deps) in a subdir to keep things tidy.
         self.folders.generators = "generators"
-        # Derive cmake preset names and default build folders from this list
-        self.folders.build_folder_vars = ["options.cmake_presets_name"]
 
     def generate(self):
+        """
+        Generate CMake toolchain + dependency files.
+
+        We intentionally DO NOT generate any CMakePresets.json here; dev
+        builds are driven by CMakeUserPresets.json instead. This avoids
+        preset-name clashes when running `conan install` into multiple
+        build subdirectories.
+        """
         tc = CMakeToolchain(self)
 
-        # Use the cmake_presets_name directly as the preset name (no "conan-" prefix)
-        tc.presets_prefix = ""
+        # Do NOT generate CMakePresets.json files from Conan.
+        # CMakeUserPresets.json (under version control) is the single source
+        # of truth for dev presets like asan/tsan/coverage/benchmark/iwyu.
+        tc.user_presets_path = False
+        tc.generators_presets_path = False
 
-        # Specify the name of the auto generate file that contains the paths to the
-        # individual CMakePresets.json in the build subdirectories
-        tc.user_presets_path = "ConanGeneratedCMakePresets.json"
-
-        # --- Add the local .venv to PATH so tools like gcovr are found---
-        venv_bin = os.path.join(self.source_folder, ".venv", "bin")
-        env = Environment()
-        env.append_path("PATH", venv_bin)
-        tc.presets_build_environment = env
-
-        # --- Base configuration ---
+        # --- Minimal baseline config for packaging (`conan create`) ---
         build_type = str(self.settings.get_safe("build_type") or "Debug")
-
-        # Common CMake cache variables
         tc.cache_variables["CMAKE_BUILD_TYPE"] = build_type
-        tc.cache_variables["BUILD_TESTING"] = "ON"
-        tc.cache_variables["BUILD_BENCHMARK"] = "OFF"
-        tc.cache_variables["BUILD_COVERAGE"] = "OFF"
-        tc.cache_variables["ENABLE_WARNINGS"] = "ON"
-        tc.cache_variables["ENABLE_WARNINGS_AS_ERRORS"] = "OFF"
-        tc.cache_variables["ENABLE_IWYU"] = "OFF"
-        tc.cache_variables["ENABLE_CCACHE"] = "ON"
-        tc.cache_variables["CMAKE_INTERPROCEDURAL_OPTIMIZATION"] = "OFF"
-        tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "ON"
 
-        # --- Release-type behaviour ---
-        # Typical release: tests OFF, LTO ON, compile_commands OFF
+        # Shared behavior we DO want in packages:
+        #   - Debug builds: tests ON
+        #   - Release builds: tests OFF, LTO ON, compile_commands OFF
         if build_type == "Release":
             tc.cache_variables["BUILD_TESTING"] = "OFF"
             tc.cache_variables["CMAKE_INTERPROCEDURAL_OPTIMIZATION"] = "ON"
             tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "OFF"
-
-        # --- Coverage toggle (independent of sanitizer) ---
-        if bool(self.options.enable_coverage):
-            tc.cache_variables["BUILD_COVERAGE"] = "ON"
         else:
-            tc.cache_variables["BUILD_COVERAGE"] = "OFF"
-
-        # --- Benchmarks toggle ---
-        # When enabled, we always build benchmarks and typically don't need tests.
-        if bool(self.options.enable_benchmark):
-            tc.cache_variables["BUILD_BENCHMARK"] = "ON"
-            tc.cache_variables["BUILD_TESTING"] = "OFF"
-            # Having compile_commands.json is often useful when tuning benchmarks
+            tc.cache_variables["BUILD_TESTING"] = "ON"
+            tc.cache_variables["CMAKE_INTERPROCEDURAL_OPTIMIZATION"] = "OFF"
             tc.cache_variables["CMAKE_EXPORT_COMPILE_COMMANDS"] = "ON"
 
-        # --- IWYU toggle ---
-        if bool(self.options.enable_iwyu):
-            tc.cache_variables["ENABLE_IWYU"] = "ON"
-
-        # --- CI debug behaviour ---
-        # Intended for strict CI builds: no ccache, warnings as errors.
-        if bool(self.options.ci_debug):
-            tc.cache_variables["ENABLE_CCACHE"] = "OFF"
-            tc.cache_variables["ENABLE_WARNINGS_AS_ERRORS"] = "ON"
+        # Warnings + ccache: packages should still be reasonably strict.
+        # (Dev presets can override these via CMakeUserPresets.json.)
+        tc.cache_variables["ENABLE_WARNINGS"] = "ON"
+        tc.cache_variables["ENABLE_WARNINGS_AS_ERRORS"] = "OFF"
+        tc.cache_variables["ENABLE_CCACHE"] = "OFF"  # typically OFF for packaging
 
         tc.generate()
 
@@ -228,7 +188,7 @@ class Pkg(ConanFile):
 
         - Uses `cmake --install` (requires proper install() rules in CMakeLists.txt)
         - Copies the license file
-        - Records the Git commit used to build this package
+        - Records the Git commit used to create this package
         """
         cm = CMake(self)
         cm.install()

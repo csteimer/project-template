@@ -7,80 +7,72 @@ preset (e.g. `debug`, `asan`, `benchmark`) it runs `conan install` and prepares
 a dedicated output folder `build/<preset>`. That folder can then be used with:
 
   * `conan build . -of build/<preset>`
-  * `cmake --build --preset <preset>` via the auto-generated `CMakeUserPresets.json`.
+  * `cmake --build --preset <preset>` via the auto-generated presets.
 
 Preset ↔ profile mapping
 ------------------------
 
-A "preset" is a logical build configuration name such as:
+We keep the mapping explicit and simple:
 
-  - debug, release, asan, tsan, coverage, benchmark, iwyu, ci-debug, ...
+    PRESET_PROFILE_MAP = {
+        "debug":    "gcc-debug",
+        "release":  "gcc-release",
+        "asan":     "gcc-debug",
+        "tsan":     "gcc-debug",
+        "coverage": "gcc-debug",
+        "benchmark": "gcc-release",
+        "iwyu":     "gcc-debug",
+        "ci-debug": "gcc-debug",
+    }
 
-Profiles are discovered from the local `profiles/` directory. For each profile
-file, the script:
+Meaning:
 
-  * parses the `[options]` section,
-  * looks for any key ending in `:cmake_presets_name`
-    (e.g. `somepkg/*:cmake_presets_name`), or
-  * falls back to the global key `cmake_presets_name`.
-
-From this it builds a mapping:
-
-    <preset_name> -> <profile_path>
+  * The *build directory* is always `build/<preset>` (e.g. `build/asan`).
+  * The *Conan profile* used is `conan/profiles/<profile_name>`.
+  * Multiple presets can share the same profile (e.g. asan/tsan/coverage share gcc-debug).
 
 Running the script
 ------------------
 
-Example:
+Examples:
 
-    ./conan_install.py debug
+    ./conan/conan_install.py debug
+    ./conan/conan_install.py release
+    ./conan/conan_install.py asan
+    ./conan/conan_install.py all
 
-This will:
+Each call will:
 
-  * find the profile whose options set `cmake_presets_name=debug`,
+  * resolve the profile from PRESET_PROFILE_MAP,
   * use that profile as both Conan **build** and (by default) **host** profile,
-  * create `build/debug` if needed, and
+  * create `build/<preset>` if needed, and
   * run:
 
         conan install . \
-          -pr:h <profile_path> \
-          -pr:b <profile_path> \
-          -of build/debug \
+          -pr:h conan/profiles/<profile> \
+          -pr:b conan/profiles/<profile> \
+          -of build/<preset> \
           --build=missing \
           [extra args after '--']
-
-As a result, `build/debug` becomes a self-contained Conan output folder for
-`conan build` and CMake presets.
 
 Cross compilation
 -----------------
 
 To use a different host profile while keeping the preset-derived build profile:
 
-    ./conan_install.py benchmark --host-profile arm-gcc
+    ./conan/conan_install.py benchmark --host-profile arm-gcc
 
 where:
 
-  * build profile  = profile with `cmake_presets_name=benchmark`
-  * host profile   = `profiles/arm-gcc` (or a custom path)
+  * build profile  = PRESET_PROFILE_MAP["benchmark"] (e.g. gcc-release)
+  * host profile   = `conan/profiles/arm-gcc` (or a custom path)
   * build dir      = `build/benchmark`
 
-Summary
--------
-
-All actual build behavior (CMAKE_BUILD_TYPE, sanitizers, coverage, IWYU,
-benchmark, CI flags, etc.) is defined in the Conan recipe and profiles.
-
-This script only:
-
-  1. Discovers participating profiles via their `cmake_presets_name` option.
-  2. Maps each preset name to a profile file.
-  3. Creates `build/<preset>` for the chosen (or all) presets.
-  4. Runs `conan install` into that folder with suitable `-pr:h`, `-pr:b` and
-     `-of` settings so `conan build` and CMake presets can be used consistently.
+Note: this script expects to be run from an active Python virtual environment.
 """
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -89,6 +81,46 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent  # <root>/conan
 ROOT_DIR = SCRIPT_DIR.parent  # <root>
 PROFILES_DIR = SCRIPT_DIR / "profiles"  # <root>/conan/profiles
+
+# ------------------------------------------------------------------------------
+# Explicit mapping: <preset name> -> <Conan profile name>
+# Adjust this dictionary to match your profiles under conan/profiles/.
+# ------------------------------------------------------------------------------
+PRESET_PROFILE_MAP: dict[str, str] = {
+    # Base configs
+    "debug": "gcc-debug",
+    "release": "gcc-release",
+    # Debug-derived feature presets
+    "asan": "gcc-debug",
+    "tsan": "gcc-debug",
+    "coverage": "gcc-debug",
+    "iwyu": "gcc-debug",
+    "ci-debug": "gcc-debug",
+    # Release-derived feature presets
+    "benchmark": "gcc-release",
+}
+
+
+def ensure_venv_active() -> None:
+    """
+    Ensure a Python virtual environment is active.
+
+    Heuristics:
+      - For venv/virtualenv: VIRTUAL_ENV is set.
+      - For stdlib venv: sys.prefix != sys.base_prefix.
+
+    If no venv is detected, print a helpful error message and exit.
+    """
+    base_prefix = getattr(sys, "base_prefix", sys.prefix)
+    in_venv = os.environ.get("VIRTUAL_ENV") is not None or sys.prefix != base_prefix
+
+    if not in_venv:
+        print("Error: no active Python virtual environment detected.\n")
+        print("A venv should be available under .venv after running:")
+        print("  ./scripts/setup_dev_env.sh")
+        print("\nThen activate it before calling this script:")
+        print("  source .venv/bin/activate\n")
+        sys.exit(1)
 
 
 def run(cmd: list[str]) -> None:
@@ -104,122 +136,6 @@ def run(cmd: list[str]) -> None:
     except subprocess.CalledProcessError as exc:
         print(f"\nCommand failed with exit code {exc.returncode}")
         sys.exit(exc.returncode)
-
-
-def _parse_profile_options(profile_path: Path) -> dict[str, str]:
-    """
-    Parse the [options] section of a Conan profile file into a dict.
-
-    The parser is intentionally simple and only understands lines like:
-
-        key=value
-
-    inside the [options] section. Comments (# or ;) and blank lines are ignored.
-    """
-    options: dict[str, str] = {}
-    in_options = False
-
-    try:
-        text = profile_path.read_text(encoding="utf-8")
-    except OSError as exc:
-        print(f"Warning: could not read profile {profile_path}: {exc}")
-        return options
-
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
-
-        if not line or line.startswith("#") or line.startswith(";"):
-            continue
-
-        if line.startswith("[") and line.endswith("]"):
-            in_options = line == "[options]"
-            continue
-
-        if not in_options:
-            continue
-
-        if "=" not in line:
-            continue
-
-        key, value = line.split("=", 1)
-        options[key.strip()] = value.strip()
-
-    return options
-
-
-def discover_preset_profile_map() -> dict[str, Path]:
-    """
-    Scan all profiles in PROFILES_DIR and build a mapping:
-
-        cmake_presets_name -> profile_path
-
-    using either:
-      - any key that ends with ':cmake_presets_name' (e.g. 'pkg/*:cmake_presets_name')
-      - or the global key 'cmake_presets_name'
-
-    If a profile defines multiple different cmake_presets_name values, this
-    function will error out, as the mapping would be ambiguous.
-    """
-    if not PROFILES_DIR.is_dir():
-        print(f"Profiles directory does not exist: {PROFILES_DIR}")
-        sys.exit(1)
-
-    mapping: dict[str, Path] = {}
-
-    for profile_path in sorted(PROFILES_DIR.iterdir()):
-        if not profile_path.is_file():
-            continue
-
-        options = _parse_profile_options(profile_path)
-
-        # Collect all keys that look like *:cmake_presets_name
-        pkg_keys = [k for k in options if k.endswith(":cmake_presets_name")]
-        has_global = "cmake_presets_name" in options
-
-        preset_value_raw = None
-
-        if pkg_keys:
-            # Prefer package-scoped form; error if multiple different ones exist
-            if len(pkg_keys) > 1:
-                values = {k: options[k] for k in pkg_keys}
-                print(
-                    "Error: profile defines multiple package-scoped "
-                    "cmake_presets_name options:\n"
-                    f"  profile: {profile_path}\n"
-                    f"  values: {values}"
-                )
-                sys.exit(1)
-
-            preset_value_raw = options[pkg_keys[0]]
-        elif has_global:
-            preset_value_raw = options["cmake_presets_name"]
-
-        if not preset_value_raw:
-            continue
-
-        # Strip optional quotes: cmake_presets_name="benchmark"
-        preset_name = preset_value_raw.strip().strip('"').strip("'")
-
-        if not preset_name:
-            continue
-
-        if preset_name in mapping and mapping[preset_name] != profile_path:
-            print(
-                "Error: multiple profiles define the same "
-                f"cmake_presets_name='{preset_name}':\n"
-                f"  {mapping[preset_name]}\n"
-                f"  {profile_path}"
-            )
-            sys.exit(1)
-
-        mapping[preset_name] = profile_path
-
-    if not mapping:
-        print(
-            "Error: no profiles with a cmake_presets_name option found "
-            f"in {PROFILES_DIR}"
-        )
-    return mapping
 
 
 def resolve_host_profile_path(arg: str | None) -> Path | None:
@@ -251,7 +167,6 @@ def resolve_host_profile_path(arg: str | None) -> Path | None:
 
 def run_conan_for_preset(
     preset: str,
-    preset_to_profile: dict[str, Path],
     host_profile_override: Path | None,
     extra_args: list[str],
 ) -> None:
@@ -259,7 +174,7 @@ def run_conan_for_preset(
     Execute `conan install` for a single logical preset.
 
     This function:
-      - Resolves the build profile path from preset_to_profile.
+      - Resolves the Conan profile name from PRESET_PROFILE_MAP.
       - Resolves the host profile path (either override or same as build profile).
       - Uses 'build/<preset>' as the build directory.
       - Ensures the build directory exists.
@@ -270,11 +185,19 @@ def run_conan_for_preset(
           - `--build=missing` to build missing dependencies
           - any additional args forwarded from the CLI.
     """
-    build_profile_path = preset_to_profile.get(preset)
-    if build_profile_path is None:
+    profile_name = PRESET_PROFILE_MAP.get(preset)
+    if profile_name is None:
         print(
-            f"Error: no profile found that defines "
-            f"cmake_presets_name={preset!r} in {PROFILES_DIR}"
+            f"Error: preset {preset!r} is not defined in PRESET_PROFILE_MAP.\n"
+            f"Known presets: {', '.join(sorted(PRESET_PROFILE_MAP.keys()))}"
+        )
+        sys.exit(1)
+
+    build_profile_path = PROFILES_DIR / profile_name
+    if not build_profile_path.is_file():
+        print(
+            f"Error: Conan profile for preset {preset!r} not found:\n"
+            f"  expected file: {build_profile_path}"
         )
         sys.exit(1)
 
@@ -287,8 +210,8 @@ def run_conan_for_preset(
 
     print(
         f"==> Running conan install for preset '{preset}'\n"
-        f"    host profile:  {host_profile_path}\n"
         f"    build profile: {build_profile_path}\n"
+        f"    host profile:  {host_profile_path}\n"
         f"    build dir:     {build_dir_path}"
     )
 
@@ -320,59 +243,39 @@ def parse_args() -> argparse.Namespace:
 
     Positional arguments:
       preset
-          Logical preset name (as defined by `cmake_presets_name` in profiles),
-          or 'all' to run installation for every discovered preset.
+          Logical preset name (one of PRESET_PROFILE_MAP keys), or 'all' to
+          run installation for every known preset. If omitted, the script will
+          list all available presets and exit.
 
     Options:
       --host-profile <name-or-path>
           Optional Conan host profile override.
           If passed without a path separator, it is resolved relative to
-          `profiles/` next to this script.
+          `conan/profiles/` next to this script.
           If omitted, the preset's build profile is also used as host profile.
 
     Extra arguments:
       Any arguments appearing after a standalone '--' are forwarded verbatim to
       `conan install` (e.g. `--update`, `--build=missing`, etc.).
-
-    Examples:
-      conan_install.py debug
-      conan_install.py release -- --update
-      conan_install.py all
-      conan_install.py benchmark --host-profile arm-gcc
     """
     parser = argparse.ArgumentParser(
         prog="conan_install.py",
         description=(
             "Run `conan install` for a given logical preset and populate "
             "`build/<preset>` with the Conan-generated toolchain and artifacts.\n\n"
-            "Conan profiles are matched to CMake presets via their custom `cmake_presets_name` "
-            "option. For each preset, the script executes:\n\n"
-            "  conan install . -pr:h <host> -pr:b <build> -of build/<preset>\n\n"
-            "This keeps Conan profiles, CMake presets and build folders aligned "
-            "so you can later run `conan build` or `cmake --preset <preset>` "
-            "without manual folder/profile management."
-        ),
-        epilog=(
-            "Examples:\n"
-            "  ./conan/conan_install.py debug\n"
-            "  ./conan/conan_install.py release -- --update\n"
-            "  ./conan/conan_install.py all\n"
-            "  ./conan/conan_install.py benchmark --host-profile arm-gcc\n\n"
-            "Preset discovery:\n"
-            "  Profiles in 'profiles/' participate if their [options] section defines either:\n"
-            "      somepkg/*:cmake_presets_name=<preset>\n"
-            "  or:\n"
-            "      cmake_presets_name=<preset>\n"
-            "  The preset names used on the CLI should correspond exactly to these values."
+            "Preset → profile mapping is defined explicitly in PRESET_PROFILE_MAP "
+            "at the top of this script."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
         "preset",
+        nargs="?",
         help=(
-            "Preset name to configure (e.g. debug, release, asan, benchmark, ...), "
-            "or 'all' to configure every discovered preset."
+            "Preset name to configure (e.g. debug, release, asan, coverage, ...), "
+            "or 'all' to configure every known preset. "
+            "If omitted, available presets will be listed."
         ),
     )
 
@@ -381,8 +284,8 @@ def parse_args() -> argparse.Namespace:
         dest="host_profile",
         help=(
             "Conan host profile override. If a bare name (no '/' or '\\\\'), "
-            "it is resolved under 'profiles/'. If omitted, the preset's build "
-            "profile is reused as the host profile."
+            "it is resolved under 'conan/profiles/'. If omitted, the preset's "
+            "build profile is reused as the host profile."
         ),
     )
 
@@ -398,43 +301,56 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    # Allow users to see help without requiring an active venv.
+    if not any(a in ("-h", "--help") for a in sys.argv[1:]):
+        ensure_venv_active()
+
     args = parse_args()
 
-    # Discover mapping from cmake_presets_name -> build profile path
-    preset_to_profile = discover_preset_profile_map()
-    available_presets = sorted(preset_to_profile.keys())
+    available_presets = sorted(PRESET_PROFILE_MAP.keys())
+
+    # If no preset was given, show a friendly message with available presets.
+    if args.preset is None:
+        print("Error: no preset specified.\n")
+        if available_presets:
+            print("Available presets (from PRESET_PROFILE_MAP):")
+            print("  - all (installs all presets listed below)")
+            for p in available_presets:
+                print(f"  - {p}")
+            print("\nUsage examples:")
+            print("  ./conan/conan_install.py debug")
+            print("  ./conan/conan_install.py release -- --update")
+            print("  ./conan/conan_install.py all")
+        else:
+            print("PRESET_PROFILE_MAP is empty.")
+        sys.exit(1)
 
     # Resolve optional host profile override (for cross compilation)
     host_profile_override = resolve_host_profile_path(args.host_profile)
-
-    # Extra args already cleaned in parse_args()
     extra_args = args.extra
 
     if args.preset == "all":
-        print("Discovered presets:", ", ".join(available_presets))
+        print("Presets to install:", ", ".join(available_presets))
         for preset in available_presets:
             run_conan_for_preset(
-                preset,
-                preset_to_profile,
-                host_profile_override,
-                extra_args,
+                preset=preset,
+                host_profile_override=host_profile_override,
+                extra_args=extra_args,
             )
             print()
     else:
         preset = args.preset
-        if preset not in preset_to_profile:
+        if preset not in PRESET_PROFILE_MAP:
             print(
-                f"Error: preset {preset!r} not found.\n"
-                f"Available presets (from cmake_presets_name): "
-                f"{', '.join(available_presets)}"
+                f"Error: preset {preset!r} not found in PRESET_PROFILE_MAP.\n"
+                f"Available presets: {', '.join(available_presets)}"
             )
             sys.exit(1)
 
         run_conan_for_preset(
-            preset,
-            preset_to_profile,
-            host_profile_override,
-            extra_args,
+            preset=preset,
+            host_profile_override=host_profile_override,
+            extra_args=extra_args,
         )
 
 

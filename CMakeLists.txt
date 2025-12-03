@@ -12,54 +12,101 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Include custom cmake scripts
+# ------------------------------------------------------------------------------
+# Tooling / helper modules
+# ------------------------------------------------------------------------------
+
+# Make custom CMake modules discoverable
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(EnableBenchmark)
+
+# Compiler cache (ccache / sccache)
 include(EnableCcache)
-include(EnableIWYU)
-include(EnableCoverage)
+
+# Warnings per target
 include(TargetSetWarnings)
+
+# Sanitizers per target (ASan / TSan)
+include(TargetSetSanitizer)
+
+# include-what-you-use integration
+include(EnableIWYU)
+
+# Coverage integration (gcovr)
+include(EnableCoverage)
+
+# Google Benchmark helpers
+include(EnableBenchmarks)
+
+# ------------------------------------------------------------------------------
+# Options that might not be set by Conan / presets
+# ------------------------------------------------------------------------------
+
+# Ensure BUILD_TESTING exists even if not set by toolchain/presets
+if(NOT DEFINED BUILD_TESTING)
+  option(BUILD_TESTING "Build tests" ON)
+endif()
 
 # Let Conan-generated deps be visible (CMakeDeps)
 include(${CMAKE_BINARY_DIR}/conan_deps.cmake OPTIONAL)
 
-# --- External dependencies ---
+# ------------------------------------------------------------------------------
+# External dependencies
+# ------------------------------------------------------------------------------
+
 message(STATUS "Including dependencies.cmake file ...")
 include(dependencies.cmake)
 
-# --- Project code ---
+# ------------------------------------------------------------------------------
+# Project code
+# ------------------------------------------------------------------------------
+
 add_subdirectory(src)
 
-# --- Tests ---
+# ------------------------------------------------------------------------------
+# Tests
+# ------------------------------------------------------------------------------
+
 if(BUILD_TESTING)
   enable_testing()
-  add_subdirectory(tests)
+  add_subdirectory(tests/integration)
+  add_subdirectory(tests/unit)
 endif()
 
-# --- Apply IWYU + warnings after targets exist ---
-# Project target
-if(TARGET ${PROJECT_NAME})
-  enable_iwyu_for_target(${PROJECT_NAME})
-  target_set_warnings(${PROJECT_NAME})
+# ------------------------------------------------------------------------------
+# Benchmarks
+# ------------------------------------------------------------------------------
+if(BUILD_BENCHMARKS)
+  add_subdirectory(tests/benchmark)
 endif()
 
-# Test target (if tests defined TEST_NAME in tests/CMakeLists.txt)
-if(DEFINED TEST_NAME AND TARGET ${TEST_NAME})
-  enable_iwyu_for_target(${TEST_NAME})
-  target_set_warnings(${TEST_NAME})
+# ------------------------------------------------------------------------------
+# Apply IWYU + warnings + sanitizers after targets exist
+# ------------------------------------------------------------------------------
+
+# Project library / executable targets
+foreach(tgt IN ITEMS ${PROJECT_NAME} ${PROJECT_NAME}_exec)
+  if(TARGET ${tgt})
+    enable_iwyu_for_target(${tgt})
+    target_set_warnings(${tgt})
+    target_set_sanitizer(${tgt})
+  endif()
+endforeach()
+
+# Test target
+if(DEFINED UNIT_TEST_NAME AND TARGET ${UNIT_TEST_NAME})
+  enable_iwyu_for_target(${UNIT_TEST_NAME})
+  target_set_warnings(${UNIT_TEST_NAME})
+  target_set_sanitizer(${UNIT_TEST_NAME})
 endif()
 
-# --- Coverage target (gcovr) ---
+# ------------------------------------------------------------------------------
+# Coverage target (gcovr)
+# ------------------------------------------------------------------------------
 # Coverage flags come from Conan/presets; this only adds the 'coverage' custom target.
 if(BUILD_COVERAGE
    AND BUILD_TESTING
-   AND DEFINED TEST_NAME
-   AND TARGET ${TEST_NAME}
+   AND DEFINED UNIT_TEST_NAME
+   AND TARGET ${UNIT_TEST_NAME}
    )
-  enable_coverage(${TEST_NAME})
-endif()
-
-# --- Benchmarks ---
-if(BUILD_BENCHMARKS)
-  add_subdirectory(benchmarks)
+  enable_coverage(${UNIT_TEST_NAME})
 endif()

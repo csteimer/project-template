@@ -172,7 +172,7 @@ TEST_F(LoggerTest, MacrosIncludeFilenameAndLine) {
     const auto l = lines();
     ASSERT_EQ(l.size(), 1u);
     EXPECT_NE(l[0].find("got 99"), std::string::npos);
-    EXPECT_NE(l[0].find("logger_tests.cpp@line:"), std::string::npos);
+    EXPECT_NE(l[0].find("logger.unit.cpp@line:"), std::string::npos);
 }
 
 /**
@@ -339,4 +339,22 @@ TEST_F(LoggerTest, OffLevelSilencesOstreamSink) {
     l->sinks().push_back(oss_sink_);
     Log::warn("won't show");
     EXPECT_TRUE(lines().empty());
+}
+
+/**
+ * @brief Passing an unrecognized enum value into Log::init()
+ *        must result in a logger configured at INFO level.
+ */
+TEST_F(LoggerTest, UnknownLevelDefaultsToInfo) {
+    // Craft an invalid enum value.
+    constexpr Level invalid_level = static_cast<Level>(999);
+
+    // Reset + init with invalid level
+    Log::reset_logger();
+    Log::init(invalid_level, Mode::Sync, "%v");
+
+    // The effective spdlog level should fall back to INFO
+    const auto lgr = Log::instance();
+    ASSERT_NE(lgr, nullptr);
+    EXPECT_EQ(lgr->level(), spdlog::level::info) << "Unknown Level values must default to INFO";
 }

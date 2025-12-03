@@ -170,7 +170,7 @@ git checkout feature/my-change
 ### 3. Compare and plot
 
 ```bash
-./tools/plot_benchmark_compare.py   --baseline build/benchmark/example_benchmark_baseline.json   --current  build/benchmark/example_benchmark_bench.json   --output   build/benchmark/benchmark_compare.png
+./tools/benchmark_runner.py   --baseline build/benchmark/example_benchmark_baseline.json   --current  build/benchmark/example_benchmark_bench.json   --output   build/benchmark/benchmark_compare.png
 ```
 
 ---

@@ -1,4 +1,4 @@
-set(UTILS_UNIT_TEST_SOURCES logger.unit_test.cpp)
+set(UTILS_UNIT_TEST_SOURCES logger.unit.cpp)
 
 add_library(utils_unit_test_lib OBJECT ${UTILS_UNIT_TEST_SOURCES})
 

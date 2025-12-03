@@ -18,16 +18,9 @@ add_subdirectory(utils)
 # -----------------------------
 # Unit test executable
 # -----------------------------
-add_executable(${UNIT_TEST_NAME} main.unit_test.cpp # add more test sources here
-               )
+add_executable(${UNIT_TEST_NAME} $<TARGET_OBJECTS:utils_unit_test_lib> main.unit.cpp)
 
-target_link_libraries(
-  ${UNIT_TEST_NAME}
-  PRIVATE GTest::gtest # you provide your own main()
-          # GTest::gmock       # add if you start using gMock
-          utils_unit_test_lib
-          # add more ..._unit_test_lib
-  )
+target_link_libraries(${UNIT_TEST_NAME} PRIVATE GTest::gtest utils_lib)
 
 set_target_properties(
   ${UNIT_TEST_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/unit_test_output"

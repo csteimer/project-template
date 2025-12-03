@@ -184,29 +184,35 @@ class Log {
 #define PROJECT_TEMPLATE_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #define LOG_TRACE(fmt, ...)                                                                                            \
-    ::project_template::utils::log::Log::trace("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__, ##__VA_ARGS__)
+    ::project_template::utils::log::Log::trace("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                         \
+                                               __LINE__ __VA_OPT__(, __VA_ARGS__))
 
 #define LOG_DEBUG(fmt, ...)                                                                                            \
-    ::project_template::utils::log::Log::debug("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__, ##__VA_ARGS__)
+    ::project_template::utils::log::Log::debug("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                         \
+                                               __LINE__ __VA_OPT__(, __VA_ARGS__))
 
 #define LOG_INFO(fmt, ...)                                                                                             \
-    ::project_template::utils::log::Log::info("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__, ##__VA_ARGS__)
+    ::project_template::utils::log::Log::info("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                          \
+                                              __LINE__ __VA_OPT__(, __VA_ARGS__))
 
 #define LOG_WARN(fmt, ...)                                                                                             \
-    ::project_template::utils::log::Log::warn("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__, ##__VA_ARGS__)
+    ::project_template::utils::log::Log::warn("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                          \
+                                              __LINE__ __VA_OPT__(, __VA_ARGS__))
 
 #define LOG_ERROR(fmt, ...)                                                                                            \
-    ::project_template::utils::log::Log::error("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__, ##__VA_ARGS__)
+    ::project_template::utils::log::Log::error("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                         \
+                                               __LINE__ __VA_OPT__(, __VA_ARGS__))
 
 #define LOG_CRITICAL(fmt, ...)                                                                                         \
-    ::project_template::utils::log::Log::critical("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__,            \
-                                                  ##__VA_ARGS__)
+    ::project_template::utils::log::Log::critical("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                      \
+                                                  __LINE__ __VA_OPT__(, __VA_ARGS__))
 
 #define LOG_WARN_IF(cond, fmt, ...)                                                                                    \
     do {                                                                                                               \
-        if (cond)                                                                                                      \
-            ::project_template::utils::log::Log::warn("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME, __LINE__,        \
-                                                      ##__VA_ARGS__);                                                  \
+        if (cond) {                                                                                                    \
+            ::project_template::utils::log::Log::warn("[{}@line:{}] " fmt, PROJECT_TEMPLATE_FILENAME,                  \
+                                                      __LINE__ __VA_OPT__(, __VA_ARGS__));                             \
+        }                                                                                                              \
     } while (0)
 
 /// @}

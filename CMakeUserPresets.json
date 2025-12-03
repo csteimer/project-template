@@ -1,61 +1,123 @@
 {
   "version": 4,
-
-  "include": [
-    "ConanGeneratedCMakePresets.json"
-  ],
-
   "configurePresets": [
+    {
+      "name": "debug-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_TESTING": "ON",
+        "BUILD_BENCHMARKS": "OFF",
+        "BUILD_COVERAGE": "OFF",
+        "ENABLE_WARNINGS": "ON",
+        "ENABLE_WARNINGS_AS_ERRORS": "OFF",
+        "ENABLE_CCACHE": "ON",
+        "ENABLE_IWYU": "OFF",
+        "ENABLE_ASAN": "OFF",
+        "ENABLE_TSAN": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "release-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "BUILD_TESTING": "OFF",
+        "BUILD_BENCHMARKS": "OFF",
+        "BUILD_COVERAGE": "OFF",
+        "ENABLE_WARNINGS": "ON",
+        "ENABLE_WARNINGS_AS_ERRORS": "OFF",
+        "ENABLE_CCACHE": "ON",
+        "ENABLE_IWYU": "OFF",
+        "ENABLE_ASAN": "OFF",
+        "ENABLE_TSAN": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
     {
       "name": "debug",
       "displayName": "Debug",
-      "inherits": "cmake_presets_name_debug-debug",
-      "binaryDir": "build/debug"
+      "inherits": "debug-base",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/debug/generators/conan_toolchain.cmake"
+      }
     },
     {
       "name": "release",
       "displayName": "Release",
-      "inherits": "cmake_presets_name_release-release",
-      "binaryDir": "build/release"
+      "inherits": "release-base",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/release/generators/conan_toolchain.cmake"
+      }
     },
     {
       "name": "asan",
       "displayName": "ASAN",
-      "inherits": "cmake_presets_name_asan-debug",
-      "binaryDir": "build/asan"
+      "inherits": "debug-base",
+      "binaryDir": "${sourceDir}/build/asan",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/asan/generators/conan_toolchain.cmake",
+        "ENABLE_ASAN": "ON"
+      }
     },
     {
       "name": "tsan",
       "displayName": "TSAN",
-      "inherits": "cmake_presets_name_tsan-debug",
-      "binaryDir": "build/tsan"
+      "inherits": "debug-base",
+      "binaryDir": "${sourceDir}/build/tsan",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/tsan/generators/conan_toolchain.cmake",
+        "ENABLE_TSAN": "ON"
+      }
     },
     {
       "name": "coverage",
       "displayName": "Coverage",
-      "inherits": "cmake_presets_name_coverage-debug",
-      "binaryDir": "build/coverage"
+      "inherits": "debug-base",
+      "binaryDir": "${sourceDir}/build/coverage",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/coverage/generators/conan_toolchain.cmake",
+        "BUILD_COVERAGE": "ON"
+      }
     },
     {
       "name": "benchmark",
       "displayName": "Benchmark",
-      "inherits": "cmake_presets_name_benchmark-release",
-      "binaryDir": "build/benchmark"
+      "inherits": "release-base",
+      "binaryDir": "${sourceDir}/build/benchmark",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/benchmark/generators/conan_toolchain.cmake",
+        "BUILD_BENCHMARKS": "ON",
+        "BUILD_TESTING": "OFF"
+      }
     },
     {
       "name": "iwyu",
       "displayName": "IWYU",
-      "inherits": "cmake_presets_name_iwyu-debug",
-      "binaryDir": "build/iwyu"
+      "inherits": "debug-base",
+      "binaryDir": "${sourceDir}/build/iwyu",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/iwyu/generators/conan_toolchain.cmake",
+        "ENABLE_IWYU": "ON"
+      }
     },
     {
       "name": "ci-debug",
       "displayName": "CI Debug",
-      "inherits": "cmake_presets_name_ci-debug-debug",
-      "binaryDir": "build/ci-debug"
+      "inherits": "debug-base",
+      "binaryDir": "${sourceDir}/build/ci-debug",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/ci-debug/generators/conan_toolchain.cmake",
+        "ENABLE_WARNINGS_AS_ERRORS": "ON",
+        "ENABLE_CCACHE": "OFF"
+      }
     }
   ],
-
   "buildPresets": [
     {
       "name": "debug",
@@ -75,7 +137,10 @@
     },
     {
       "name": "coverage",
-      "configurePreset": "coverage"
+      "configurePreset": "coverage",
+      "targets": [
+        "coverage"
+      ]
     },
     {
       "name": "benchmark",
@@ -90,7 +155,6 @@
       "configurePreset": "ci-debug"
     }
   ],
-
   "testPresets": [
     {
       "name": "debug",
