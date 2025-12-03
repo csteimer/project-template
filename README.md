@@ -96,7 +96,7 @@ This file:
 
 ### **benchmark**
 - Only benchmarks enabled
-- Provides `run-benchmarks` aggregate target
+- Provides `run-benchmark` aggregate target
   **Use for performance regression testing.**
 
 ### **ci-debug**

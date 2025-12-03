@@ -48,3 +48,6 @@ docs/
 
 # === Compressed files ===
 *.zip
+
+# === Auto generated dir during benchmarks ===
+.bench_worktrees/

@@ -90,30 +90,32 @@ def short_ref(ref: str) -> str:
 
 
 def run_benchmarks(project_root: Path) -> None:
-    """
-    Configure (if needed), build, and run benchmarks for a project root.
-
-    Uses:
-      - CMake preset 'benchmark'
-      - build directory 'build/benchmark'
-      - aggregate target 'run-benchmark'
-    """
     build_dir = project_root / BUILD_SUBDIR
     print(f"[bench:run] Project root: {project_root}")
     print(f"[bench:run] Build dir:    {build_dir}")
     print(f"[bench:run] Preset:       {CMAKE_PRESET}")
     print(f"[bench:run] Target:       {BENCH_TARGET}")
 
-    cache_file = build_dir / "CMakeCache.txt"
-    if not cache_file.is_file():
-        print(
-            f"[bench:run] No CMake cache found at '{cache_file}'. Running 'cmake --preset {CMAKE_PRESET}'..."
+    # 1) Run Conan install for this preset inside the given tree
+    conan_install = project_root / "conan" / "conan_install.py"
+    if not conan_install.is_file():
+        raise SystemExit(
+            f"Conan install script not found at '{conan_install}'. "
+            "Make sure you run benchmark_runner.py from a repo that contains 'conan/conan_install.py'."
         )
-        run_cmd(["cmake", "--preset", CMAKE_PRESET], cwd=project_root)
 
+    print(f"[bench:run] Running Conan install for preset '{CMAKE_PRESET}'...")
+    run_cmd([str(conan_install), CMAKE_PRESET], cwd=project_root)
+
+    # 2) Configure with the benchmark preset
+    print(f"[bench:run] Configuring with preset '{CMAKE_PRESET}'...")
+    run_cmd(["cmake", "--preset", CMAKE_PRESET], cwd=project_root)
+
+    # 3) Build the preset
     print("[bench:run] Building benchmarks...")
     run_cmd(["cmake", "--build", "--preset", CMAKE_PRESET], cwd=project_root)
 
+    # 4) Run the aggregate benchmark target
     print(f"[bench:run] Running aggregate benchmark target '{BENCH_TARGET}'...")
     run_cmd(
         ["cmake", "--build", str(build_dir), "--target", BENCH_TARGET], cwd=project_root
@@ -136,27 +138,47 @@ def load_benchmarks_from_file(path: Path, time_key: str) -> Dict[str, float]:
         benchmark_name -> time (float)
 
     Only entries that contain the requested time_key are included.
+    Files that do not look like Google Benchmark JSON are ignored.
     """
     with path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
+    if not isinstance(data, dict):
+        print(
+            f"[bench:load] Skipping {path}: JSON root is {type(data).__name__}, expected object."
+        )
+        return {}
+
+    # Some versions use "benchmarks", some "benchmark"
+    bench_key = None
+    if "benchmark" in data:
+        bench_key = "benchmark"
+    elif "benchmarks" in data:
+        bench_key = "benchmarks"
+
+    if bench_key is None:
+        print(
+            f"[bench:load] Skipping {path}: no 'benchmark' or 'benchmarks' key found."
+        )
+        return {}
+
     result: Dict[str, float] = {}
-    for entry in data.get("benchmark", []):
+    for entry in data.get(bench_key, []):
         name = entry.get("name")
         if not name:
             continue
         if time_key not in entry:
             continue
         result[name] = float(entry[time_key])
+
     return result
 
 
 def load_benchmarks_from_dir(directory: Path, time_key: str) -> Dict[str, float]:
     """
-    Load benchmark results from all JSON files in a directory.
+    Load benchmark results from all *_bench.json files under a directory, recursively.
 
-    Files matching '*_bench.json' are preferred. If none are found, all '*.json'
-    files in the directory are used. Results are merged into a single mapping:
+    Results are merged into a single mapping:
 
         benchmark_name -> time (float)
 
@@ -165,12 +187,13 @@ def load_benchmarks_from_dir(directory: Path, time_key: str) -> Dict[str, float]
     if not directory.is_dir():
         raise SystemExit(f"'{directory}' is not a directory.")
 
-    json_paths = sorted(directory.glob("*_bench.json"))
-    if not json_paths:
-        json_paths = sorted(directory.glob("*.json"))
+    # Search recursively for benchmark result files.
+    json_paths = sorted(directory.rglob("*_bench.json"))
 
     if not json_paths:
-        raise SystemExit(f"No JSON files found in '{directory}'.")
+        raise SystemExit(
+            f"No benchmark JSON files matching '*_bench.json' found under '{directory}'."
+        )
 
     merged: Dict[str, float] = {}
     for p in json_paths:

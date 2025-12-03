@@ -130,13 +130,13 @@ function(add_benchmark_aggregate_target)
   if(NOT bench_execs)
     message(
       STATUS "add_benchmark_aggregate_target: no benchmarks registered, "
-             "not creating run-benchmarks"
+             "not creating run-benchmark"
       )
     return()
   endif()
 
   add_custom_target(
-    run-benchmarks
+    run-benchmark
     COMMENT "Running all Google Benchmark executables (JSON output in *_bench.json)"
     VERBATIM
     )
@@ -146,7 +146,7 @@ function(add_benchmark_aggregate_target)
     set(out_file "${exec}_bench.json")
 
     add_custom_command(
-      TARGET run-benchmarks
+      TARGET run-benchmark
       POST_BUILD
       COMMAND $<TARGET_FILE:${exec}> --benchmark_format=json --benchmark_out=${out_file}
       COMMAND ${CMAKE_COMMAND} -E echo "✔ Finished benchmark: ${exec} -> ${out_file}"
@@ -155,5 +155,5 @@ function(add_benchmark_aggregate_target)
       )
   endforeach()
 
-  message(STATUS "Created aggregate benchmark target: run-benchmarks")
+  message(STATUS "Created aggregate benchmark target: run-benchmark")
 endfunction()
