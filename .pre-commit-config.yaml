@@ -15,14 +15,6 @@ repos:
       - id: clang-format
         # Uses the .clang-format in the repo root
         args: [ --style=file, -i ]
-      - id: clang-tidy
-        args:
-          - -p=build/debug
-          - -fix
-          - -fix-errors
-        # Run only when invoked manually:
-        #   pre-commit run clang-tidy --hook-stage manual
-        stages: [manual]
 
   - repo: https://github.com/crate-ci/typos
     rev: v1

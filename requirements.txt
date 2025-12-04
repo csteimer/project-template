@@ -1,7 +1,0 @@
-pre-commit
-cpplint
-black
-clang-format
-cmakelang
-gcovr
-conan
