@@ -347,7 +347,7 @@ TEST_F(LoggerTest, OffLevelSilencesOstreamSink) {
  */
 TEST_F(LoggerTest, UnknownLevelDefaultsToInfo) {
     // Craft an invalid enum value.
-    constexpr Level invalid_level = static_cast<Level>(999);
+    constexpr auto invalid_level = static_cast<Level>(999);
 
     // Reset + init with invalid level
     Log::reset_logger();
