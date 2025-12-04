@@ -12,7 +12,7 @@ Subcommands:
       - Target:       'run-benchmark'
 
     Example:
-      ./tools/bench.py run
+      ./tools/benchmark_runner.py run
 
   compare-json
     Compare two sets of Google Benchmark JSON outputs and print a table of
@@ -23,31 +23,30 @@ Subcommands:
       - two directories that contain multiple JSON files (e.g. *_bench.json)
 
     Examples:
-      ./tools/bench.py compare-json --baseline base.json --current curr.json
-      ./tools/bench.py compare-json --baseline build/base/benchmark \
-                                    --current  build/curr/benchmark
+      ./tools/benchmark_runner.py compare-json --baseline base.json --current curr.json
+      ./tools/benchmark_runner.py compare-json --baseline build/base/benchmark \
+                                               --current  build/curr/benchmark
 
   compare-commits
     For each of two commits:
-      - create (or reuse) a git worktree under .bench_worktrees/
+      - create (or reuse) a git worktree under build/benchmark/benchmark_worktrees/
       - configure, build, and run the 'benchmark' preset
       - collect JSON benchmark results from build/benchmark
     Then compare their performance and print a table.
 
     Example:
-      ./tools/bench.py compare-commits <baseline-commit> <current-commit>
+      ./tools/benchmark_runner.py compare-commits <baseline-commit> <current-commit>
 
 Use -h/--help after the main command or any subcommand for detailed options:
 
-  ./tools/bench.py --help
-  ./tools/bench.py run --help
-  ./tools/bench.py compare-json --help
-  ./tools/bench.py compare-commits --help
+  ./tools/benchmark_runner.py --help
+  ./tools/benchmark_runner.py run --help
+  ./tools/benchmark_runner.py compare-json --help
+  ./tools/benchmark_runner.py compare-commits --help
 """
 
 import argparse
 import json
-import os
 import subprocess
 from pathlib import Path
 from typing import Dict, Tuple
@@ -56,6 +55,7 @@ from typing import Dict, Tuple
 BUILD_SUBDIR = Path("build/benchmark")
 CMAKE_PRESET = "benchmark"
 BENCH_TARGET = "run-benchmark"
+BENCH_WORKTREES_DIR_NAME = "benchmark_worktrees"
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +118,8 @@ def run_benchmarks(project_root: Path) -> None:
     # 4) Run the aggregate benchmark target
     print(f"[bench:run] Running aggregate benchmark target '{BENCH_TARGET}'...")
     run_cmd(
-        ["cmake", "--build", str(build_dir), "--target", BENCH_TARGET], cwd=project_root
+        ["cmake", "--build", str(build_dir), "--target", BENCH_TARGET],
+        cwd=project_root,
     )
 
     print(
@@ -334,8 +335,10 @@ def run_benchmarks_for_commit(ref: str, time_key: str) -> Dict[str, float]:
     """
     repo_root = ensure_repo_root()
     short = short_ref(ref)
-    worktrees_root = repo_root / ".bench_worktrees"
-    worktrees_root.mkdir(exist_ok=True)
+
+    # Worktrees live under: build/benchmark/benchmark_worktrees/<short-ref>
+    worktrees_root = repo_root / BUILD_SUBDIR / BENCH_WORKTREES_DIR_NAME
+    worktrees_root.mkdir(parents=True, exist_ok=True)
 
     worktree_dir = worktrees_root / short
 
@@ -388,7 +391,7 @@ def parse_args() -> argparse.Namespace:
             "  run             Configure, build, and run benchmarks for current tree.\n"
             "  compare-json    Compare benchmark JSON outputs (files or directories).\n"
             "  compare-commits Run benchmarks for two Git commits and compare results.\n\n"
-            "Use 'bench.py <command> -h' for details on each subcommand."
+            "Use 'benchmark_runner.py <command> -h' for details on each subcommand."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -399,7 +402,7 @@ def parse_args() -> argparse.Namespace:
     )
 
     # run
-    run_parser = subparsers.add_parser(
+    subparsers.add_parser(
         "run",
         help="Configure, build, and run benchmarks for the current working tree.",
         description=(
@@ -449,7 +452,8 @@ def parse_args() -> argparse.Namespace:
         help="Run benchmarks for two Git commits and compare results.",
         description=(
             "Run benchmarks for two Git commits and compare their performance.\n\n"
-            "For each commit, a git worktree is created (or reused) under '.bench_worktrees/<short-ref>'. "
+            "For each commit, a git worktree is created (or reused) under "
+            "'build/benchmark/benchmark_worktrees/<short-ref>'. "
             "Benchmarks are built and executed there using the 'benchmark' preset. "
             "JSON outputs are loaded from 'build/benchmark'.\n"
         ),
