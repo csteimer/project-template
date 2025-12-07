@@ -117,7 +117,7 @@ def ensure_venv_active() -> None:
     if not in_venv:
         print("Error: no active Python virtual environment detected.\n")
         print("A venv should be available under .venv after running:")
-        print("  ./scripts/setup_dev_env.sh")
+        print("  ./setup_dev_env.sh")
         print("\nThen activate it before calling this script:")
         print("  source .venv/bin/activate\n")
         sys.exit(1)
