@@ -3,14 +3,13 @@ PROJECT_NAME           = "project_template"
 OUTPUT_DIRECTORY       = build
 
 GENERATE_HTML          = YES
-GENERATE_XML           = YES
+GENERATE_XML           = NO
 GENERATE_LATEX         = NO
 
-# Source code to document: now relative to docs/doxygen/
-INPUT                  = ../../src
+INPUT                  = ../../src \
+                         ../../app
 RECURSIVE              = YES
 
-# Exclude tests and externals: also relative to this directory
 EXCLUDE_PATTERNS       = ../../*build*/* \
                          ../../tests/*
 

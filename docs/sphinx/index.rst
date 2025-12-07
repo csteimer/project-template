@@ -1,17 +1,6 @@
-project-template documentation
-==============================
+C++ API Reference
+=================
 
-Welcome to the documentation for ``project_template``.
+The full C++ API reference is provided by the Doxygen-generated site:
 
-This site combines:
-
-- Hand-written guides and usage notes
-- API reference generated from the C++ source via Doxygen + Breathe
-
-Contents
---------
-
-.. toctree::
-   :maxdepth: 2
-
-   api_reference
+- `Open C++ API Reference <doxygen/build/html/index.html>`_

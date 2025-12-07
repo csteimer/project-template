@@ -28,7 +28,7 @@ pip install -r docs/sphinx/requirements.txt
 
 echo "Installing native dependencies via apt ..."
 sudo apt update
-sudo apt install -y ninja-build clang-tidy cppcheck ccache doxygen iwyu
+sudo apt install -y ninja-build clang-tidy cppcheck ccache doxygen iwyu graphviz
 
 echo "Configuring ccache..."
 ccache --set-config=cache_dir=~/.ccache

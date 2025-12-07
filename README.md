@@ -46,7 +46,7 @@ This script:
 - Installs Python‑based development tools:
     - `pre-commit`, `cpplint`, `black`, `clang-format`, `cmakelang`, `gcovr`, `conan`
 - Installs native system dependencies via `apt`:
-    - `ninja-build`, `clang-tidy`, `cppcheck`, `ccache`, `doxygen`, `iwyu`
+    - `ninja-build`, `clang-tidy`, `cppcheck`, `ccache`, `doxygen`, `iwyu`, `graphviz`
 - Configures `ccache` (size + directory)
 - Installs this repository’s pre‑commit hooks
 
@@ -464,15 +464,42 @@ cppcheck \
 
 ---
 
-# 12. Doxygen
+# 12. Documentation
 
-Generate documentation:
+The project provides both Doxygen-based C++ API documentation and a unified Sphinx website that integrates the generated XML output.
+
+## 12.1 Doxygen (C++ API)
+
+Generate Doxygen output (XML + optional HTML):
 
 ```bash
-doxygen
+cd docs/doxygen
+doxygen Doxyfile
 ```
 
-Output: `docs/html/index.html`
+Open the HTML output under `docs/doxygen/build/html/index.html` in a browser for direct inspection.
+
+## 12.2 Sphinx (full documentation site)
+
+The Sphinx documentation automatically consumes the Doxygen XML via Breathe.
+
+Build the HTML site:
+
+```bash
+make -C docs/sphinx html
+```
+
+Output:
+`docs/sphinx/build/html/index.html`
+
+## 12.3 One-step build
+
+Use the helper script to generate both:
+
+```bash
+./tools/generate_docs.sh
+```
+
 
 
 ------
