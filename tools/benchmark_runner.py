@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Benchmark helper tool for project-template.
+Benchmark helper tool for project_template.
 
 Subcommands:
 
@@ -386,7 +386,7 @@ def handle_compare_commits(args: argparse.Namespace) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Benchmark helper for project-template.\n\n"
+            "Benchmark helper for project_template.\n\n"
             "Subcommands:\n"
             "  run             Configure, build, and run benchmarks for current tree.\n"
             "  compare-json    Compare benchmark JSON outputs (files or directories).\n"

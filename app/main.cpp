@@ -14,7 +14,7 @@ int main() {
     // ------------------------------------------------------------
     Log::init(Level::Debug, Mode::Async, "[%T.%f] [%^%l%$] %v");
 
-    LOG_INFO("Project-template demo starting up");
+    LOG_INFO("project_template demo starting up");
     LOG_DEBUG("Debug log example with value={}", 123);
     LOG_TRACE("Trace example (may be hidden if level > Trace)");
 

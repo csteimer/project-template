@@ -1,5 +1,5 @@
 """
-Conan recipe for the project-template package.
+Conan recipe for the project_template package.
 
 Key points:
 
@@ -27,7 +27,7 @@ Key points:
 - test_requires:
     Test-only dependencies (e.g. gtest, benchmark). These are used when
     building/testing this package, but are **not** propagated to packages
-    that depend on project-template.
+    that depend on project_template.
 
 - Versioning:
     Determined automatically from Git via set_version(), or overridden by
@@ -47,7 +47,7 @@ from conan.tools.files import copy, save
 
 
 class Pkg(ConanFile):
-    name = "project-template"
+    name = "project_template"
     version = None  # This is set automatically by set_version()
 
     # Settings describe the binary configuration this package depends on.

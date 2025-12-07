@@ -8,7 +8,7 @@ professional foundation that you can extend into real projects without carrying 
 
 # 1. Quick Start
 
-## 1.1 Prepare the Development Environment
+### 1.1 Prepare the Development Environment
 
 ```bash
 ./setup_dev_env.sh
@@ -33,7 +33,7 @@ source .venv/bin/activate
 
 ---
 
-# 2. Install Dependencies for a Build Preset
+### 1.2 Install Dependencies for a Build Preset
 
 Dependency installation is handled via:
 
@@ -51,13 +51,13 @@ Examples:
 
 This populates `build/<preset>/generators/` with Conan toolchains and dependency
 files. The script contains detailed documentation (`--help`).
-The available options for `<preset>` corresponds to the cmake presets (see [Section 4](#4-cmake-presets)).
+The available options for `<preset>` corresponds to the cmake presets (see [Section 2](#2-cmake-presets)).
 
 Remark: Use the `all` argument to call `conan install` in the build directories of all build presets.
 
 ---
 
-# 3. Building the Project
+# 1.3 Building the Project
 
 ```bash
 cmake --preset <cmake-preset>
@@ -66,7 +66,7 @@ cmake --build --preset <cmake-preset>
 
 ---
 
-# 4. CMake Presets
+# 2. CMake Presets
 
 Defined in `CMakeUserPresets.json`:
 
@@ -83,10 +83,10 @@ Defined in `CMakeUserPresets.json`:
 
 ---
 
-# 5. Project Structure
+# 3. Project Structure
 
 ```
-project-template/
+project_template/
   ├── app/                  # Application executable (links internal libraries)
   ├── cmake/                # Custom CMake helper modules (warnings, sanitizers, coverage, IWYU, benchmarks, ...)
   ├── conan/                # Conan scripts, profiles, and automation helpers
@@ -107,8 +107,9 @@ project-template/
 
 ---
 
-# 6. Conan Package Workflow
+# 4. Conan Package Workflow
 
+### 4.1 Package Generation and Upload
 This repository provides a helper script to **build and (optionally) upload**
 Conan packages for all or selected profiles in `conan/profiles/`.
 It uses `conan create` under the hood and automatically:
@@ -134,7 +135,7 @@ The upload step can be disabled with the `--disable-upload` flag:
 ./conan/release_conan_packages.py --disable-upload
 ```
 
-## Common usage examples
+### Common usage examples
 
 Build and upload for **all** profiles under `conan/profiles/` (host == build):
 
@@ -165,12 +166,21 @@ Cross-compilation: build with `gcc-debug`, target host profile `gcc-release`:
 If any profile or remote is missing, the script aborts with a clear error
 message to avoid publishing incomplete or misconfigured packages.
 
+### 4.2. Versioning
+
+The Conan recipe automatically derives versions from:
+
+1. `PKG_VERSION` (if set), or
+2. Git tag at HEAD, otherwise
+3. `"latest"`
+
+Each package also embeds `metadata/git_commit.txt`.
 
 ---
 
-# 7. Testing
+# 5. Testing
 
-## Unit Tests
+### 5.1 Unit Tests
 
 Located under: `tests/unit/`
 
@@ -182,19 +192,24 @@ Run:
 ctest --preset <cmake-preset>
 ```
 
-## Integration Tests
+### 5.2 Integration Tests
 
 Located under: `tests/integration/`
 
-## Benchmark Tests
+Remark: Empty placeholder.
+
+### 5.3 Benchmark Tests
 
 Located under: `tests/benchmark`
 
 Configure and build via `--preset benchmark`
 
+See [Section 6](#6-benchmarks--performance-comparison) for instructions on how to use the helper script for
+running benchmarks and comparing multiple runs.
+
 ---
 
-# 8. Benchmarks & Performance Comparison
+# 6. Benchmarks & Performance Comparison
 
 This project integrates **Google Benchmark** and provides a helper script
 `tools/benchmark_runner.py` for running and comparing performance results.
@@ -203,7 +218,7 @@ The script supports three workflows:
 
 ---
 
-## 8.1 Run Benchmarks for the Current Working Tree
+### 6.1 Run Benchmarks for the Current Working Tree
 
 This command:
 
@@ -221,7 +236,7 @@ Use this before comparing results or when profiling performance manually.
 
 ---
 
-## 8.2 Compare Two Benchmark Outputs
+### 6.2 Compare Two Benchmark Outputs
 
 The `compare-json` subcommand compares performance between:
 
@@ -258,7 +273,7 @@ You can choose the metric:
 
 ---
 
-## 8.3 Compare Performance Across Two Git Commits
+### 6.3 Compare Performance Across Two Git Commits
 
 ```bash
 ./tools/benchmark_runner.py compare-commits <baseline-ref> <current-ref>
@@ -282,7 +297,7 @@ This allows you to confirm whether a change improves performance before merging.
 
 ---
 
-### 8.4 Need Help?
+### 6.4 Need Help?
 
 ```bash
 ./tools/benchmark_runner.py --help
@@ -293,9 +308,7 @@ This allows you to confirm whether a change improves performance before merging.
 
 ---
 
----
-
-# 9. Code Coverage
+# 7. Code Coverage
 
 Enable coverage instrumentation:
 
@@ -313,7 +326,7 @@ build/coverage/coverage_report/index.html
 
 ---
 
-# 10. IWYU (Include-What-You-Use)
+# 8. IWYU (Include-What-You-Use)
 
 IWYU helps you automatically detect missing or unnecessary `#include` directives.
 This keeps compile times low, avoids hidden dependencies,
@@ -330,7 +343,7 @@ cmake --build --preset iwyu --target iwyu-all
 
 ---
 
-# 11. Logging Framework
+# 9. Logging Framework
 
 `src/utils/log/logger.hpp` provides a unified `spdlog`‑based logger:
 
@@ -347,7 +360,7 @@ LOG_INFO("Starting application");
 
 ---
 
-# 12. Pre‑Commit Hooks
+# 10. Pre‑Commit Hooks
 
 Installed automatically via `setup_dev_env.sh`.
 
@@ -373,7 +386,7 @@ git commit --no-verify -m "This commit won't run the pre-commit hooks"
 
 ---
 
-# 13. Static Analysis
+# 11. Static Analysis
 
 ## clang-tidy
 
@@ -407,8 +420,6 @@ git diff --name-only origin/main...HEAD -- '*.cpp' '*.cc' '*.cxx' \
   | xargs -r run-clang-tidy -p <build-directory>
 ```
 
----
-
 ## cppcheck
 
 **cppcheck** is a static analysis tool which can read your project’s
@@ -423,8 +434,6 @@ produce false positives for:
 These diagnostics do **not** indicate real issues in the compiled code,
 so they are selectively suppressed in the examples given below.
 
----
-
 ### Run cppcheck using the compile database
 
 Use the compile database generated by CMake for a specific preset:
@@ -438,9 +447,10 @@ cppcheck \
   --suppress=missingIncludeSystem \
   --suppress=syntaxError
 ```
- ---
 
-# 14. Doxygen
+---
+
+# 12. Doxygen
 
 Generate documentation:
 
@@ -450,17 +460,6 @@ doxygen
 
 Output: `docs/html/index.html`
 
----
-
-# 15. Versioning
-
-The Conan recipe automatically derives versions from:
-
-1. `PKG_VERSION` (if set), or
-2. Git tag at HEAD, otherwise
-3. `"latest"`
-
-Each package also embeds `metadata/git_commit.txt`.
 
 ---
 
