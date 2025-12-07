@@ -44,7 +44,7 @@ test_output/
 Thumbs.db
 
 # === Generated Documentation ===
-docs/
+docs/doxygen/build
 
 # === Compressed files ===
 *.zip
