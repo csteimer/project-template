@@ -31,18 +31,20 @@
 #
 # --------------------------------------------------------------------------------------------------
 
+# Include the custom message wrappers
+include(Logging)
+
 # --- Mutual exclusion check ----------------------------------------------------
 if(ENABLE_ASAN AND ENABLE_TSAN)
-  message(
-    FATAL_ERROR "Both ENABLE_ASAN and ENABLE_TSAN are ON.\n"
-                "ASan and TSan cannot be enabled together."
+  log_fatal(
+    "Both ENABLE_ASAN and ENABLE_TSAN are ON.\n" "ASan and TSan cannot be enabled together."
     )
 endif()
 
 # --- Function to apply sanitizer flags to a specific target ---------------------
 function(target_set_sanitizer target)
   if(NOT TARGET "${target}")
-    message(FATAL_ERROR "target_set_sanitizer(): target '${target}' does not exist")
+    log_fatal("target_set_sanitizer(): target '${target}' does not exist")
   endif()
 
   # No sanitizers selected → nothing to do
@@ -52,10 +54,10 @@ function(target_set_sanitizer target)
 
   # Only GCC/Clang support these flags in this form
   if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU"))
-    message(
-      WARNING "Sanitizers requested, but compiler '${CMAKE_CXX_COMPILER_ID}' "
-              "does not support ASan/TSan in the expected form. "
-              "Ignoring sanitizer configuration for target '${target}'."
+    log_warning(
+      "Sanitizers requested, but compiler '${CMAKE_CXX_COMPILER_ID}' "
+      "does not support ASan/TSan in the expected form. "
+      "Ignoring sanitizer configuration for target '${target}'."
       )
     return()
   endif()
@@ -64,7 +66,7 @@ function(target_set_sanitizer target)
   if(ENABLE_ASAN)
     target_compile_options(${target} PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
     target_link_options(${target} PRIVATE -fsanitize=address,undefined)
-    message(STATUS "Applied ASan+UBSan to target: ${target}")
+    log_status("Applied ASan+UBSan to target: ${target}")
     return()
   endif()
 
@@ -72,7 +74,7 @@ function(target_set_sanitizer target)
   if(ENABLE_TSAN)
     target_compile_options(${target} PRIVATE -fsanitize=thread)
     target_link_options(${target} PRIVATE -fsanitize=thread)
-    message(STATUS "Applied TSan to target: ${target}")
+    log_status("Applied TSan to target: ${target}")
     return()
   endif()
 

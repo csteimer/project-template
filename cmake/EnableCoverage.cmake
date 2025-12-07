@@ -48,6 +48,9 @@
 #
 # --------------------------------------------------------------------------------------------------
 
+# Include the custom message wrappers
+include(Logging)
+
 # Allow presets/toolchain to control BUILD_COVERAGE. Only define the option if not set yet.
 if(NOT DEFINED BUILD_COVERAGE)
   option(BUILD_COVERAGE "Build with coverage instrumentation and add 'coverage' target" OFF)
@@ -57,9 +60,9 @@ endif()
 if(BUILD_COVERAGE)
   # Coverage logic here assumes GCC-style coverage flags
   if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    message(
-      FATAL_ERROR "EnableCoverage: BUILD_COVERAGE=ON but compiler is not GCC. "
-                  "Current compiler: ${CMAKE_CXX_COMPILER_ID}"
+    log_fatal(
+      "EnableCoverage: BUILD_COVERAGE=ON but compiler is not GCC. "
+      "Current compiler: ${CMAKE_CXX_COMPILER_ID}"
       )
   endif()
 
@@ -87,12 +90,12 @@ endif()
 # --------------------------------------------------------------------------------------------------
 function(enable_coverage test_target)
   if(NOT BUILD_COVERAGE)
-    message(STATUS "Coverage: BUILD_COVERAGE=OFF, not adding coverage target")
+    log_status("Coverage: BUILD_COVERAGE=OFF, not adding coverage target")
     return()
   endif()
 
   if(NOT TARGET ${test_target})
-    message(FATAL_ERROR "enable_coverage: test target '${test_target}' does not exist")
+    log_fatal("enable_coverage: test target '${test_target}' does not exist")
   endif()
 
   # For coverage runs we want tests built/enabled
@@ -107,9 +110,8 @@ function(enable_coverage test_target)
     DOC "Path to gcovr executable"
     )
   if(NOT GCOVR_EXECUTABLE)
-    message(
-      FATAL_ERROR "gcovr not found - please install gcovr, for example:\n"
-                  "  sudo apt-get install -y gcovr"
+    log_fatal(
+      "gcovr not found - please install gcovr, for example:\n" "  sudo apt-get install -y gcovr"
       )
   endif()
 

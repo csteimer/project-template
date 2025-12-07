@@ -38,21 +38,24 @@
 #
 # --------------------------------------------------------------------------------------------------
 
+# Include the custom message wrappers
+include(Logging)
+
 if(NOT DEFINED BUILD_BENCHMARKS)
   option(BUILD_BENCHMARKS "Build benchmark executables (Google Benchmark)" OFF)
 endif()
 
 if(NOT BUILD_BENCHMARKS)
-  message(STATUS "Google Benchmark: BUILD_BENCHMARKS=OFF")
+  log_status("Google Benchmark: BUILD_BENCHMARKS=OFF")
   return()
 endif()
 
 # With Conan 2 + CMakeDeps, benchmark is provided via find_package
-message(STATUS "Google Benchmark: BUILD_BENCHMARKS=ON, locating package ...")
+log_status("Google Benchmark: BUILD_BENCHMARKS=ON, locating package ...")
 find_package(benchmark REQUIRED CONFIG)
 
 if(NOT TARGET benchmark::benchmark)
-  message(FATAL_ERROR "EnableBenchmarks: benchmark::benchmark target not found.")
+  log_fatal("EnableBenchmarks: benchmark::benchmark target not found.")
 endif()
 
 # Record all benchmark executables in a GLOBAL property
@@ -82,9 +85,8 @@ function(target_add_benchmark name)
   endif()
 
   if(NOT TARGET benchmark::benchmark)
-    message(
-      FATAL_ERROR "target_add_benchmark: Google Benchmark is not available "
-                  "(missing benchmark::benchmark target)"
+    log_fatal(
+      "target_add_benchmark: Google Benchmark is not available (missing benchmark::benchmark target)"
       )
   endif()
 
@@ -100,7 +102,7 @@ function(target_add_benchmark name)
   # Remember this benchmark executable
   set_property(GLOBAL APPEND PROPERTY BENCHMARK_EXECUTABLES ${name})
 
-  message(STATUS "Added benchmark target: ${name}")
+  log_status(" Added benchmark target: ${name}")
 endfunction()
 
 # --------------------------------------------------------------------------------------------------
@@ -128,22 +130,21 @@ function(add_benchmark_aggregate_target)
 
   get_property(bench_execs GLOBAL PROPERTY BENCHMARK_EXECUTABLES)
   if(NOT bench_execs)
-    message(
-      STATUS "add_benchmark_aggregate_target: no benchmarks registered, "
-             "not creating run-benchmark"
+    log_status(
+      "add_benchmark_aggregate_target: no benchmarks registered, not creating run-benchmark"
       )
     return()
   endif()
 
   add_custom_target(
     run-benchmark
-    COMMENT "Running all Google Benchmark executables (JSON output in *_bench.json)"
+    COMMENT "Running all Google Benchmark executables (JSON output in *_bench.json) "
     VERBATIM
     )
 
   foreach(exec IN LISTS bench_execs)
     # Write benchmark output to <target>_bench.json next to the binary
-    set(out_file "${exec}_bench.json")
+    set(out_file " ${exec}_bench.json")
 
     add_custom_command(
       TARGET run-benchmark
@@ -155,5 +156,5 @@ function(add_benchmark_aggregate_target)
       )
   endforeach()
 
-  message(STATUS "Created aggregate benchmark target: run-benchmark")
+  log_status("Created aggregate benchmark target: run-benchmark")
 endfunction()

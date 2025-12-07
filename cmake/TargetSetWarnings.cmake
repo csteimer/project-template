@@ -43,6 +43,9 @@
 #
 # --------------------------------------------------------------------------------------------------
 
+# Include the custom message wrappers
+include(Logging)
+
 # Warning toggles, configurable via presets or manual CMake invocation
 if(NOT DEFINED ENABLE_WARNINGS)
   option(ENABLE_WARNINGS "Enable warnings in target_set_warnings()" ON)
@@ -68,12 +71,12 @@ endif()
 # --------------------------------------------------------------------------------------------------
 function(target_set_warnings target)
   if(NOT ENABLE_WARNINGS)
-    message(STATUS "TargetSetWarnings: warnings disabled globally (ENABLE_WARNINGS=OFF)")
+    log_status("TargetSetWarnings: warnings disabled globally (ENABLE_WARNINGS=OFF)")
     return()
   endif()
 
   if(NOT TARGET ${target})
-    message(FATAL_ERROR "target_set_warnings: target '${target}' does not exist")
+    log_fatal("target_set_warnings: target '${target}' does not exist")
   endif()
 
   set(warnings_cxx "")
@@ -120,8 +123,8 @@ function(target_set_warnings target)
 
     # --- Unknown compiler: no warnings applied -----------------------------------------------------
   else()
-    message(
-      STATUS "TargetSetWarnings: unknown compiler '${CMAKE_CXX_COMPILER_ID}', not setting warnings"
+    log_status(
+      "TargetSetWarnings: unknown compiler '${CMAKE_CXX_COMPILER_ID}', not setting warnings"
       )
     return()
   endif()

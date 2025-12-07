@@ -15,9 +15,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ------------------------------------------------------------------------------
 # Tooling / helper modules
 # ------------------------------------------------------------------------------
-
 # Make custom CMake modules discoverable
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# Wrappers for cmake messages
+include(Logging)
 
 # Compiler cache (ccache / sccache)
 include(EnableCcache)
@@ -52,8 +54,7 @@ include(${CMAKE_BINARY_DIR}/conan_deps.cmake OPTIONAL)
 # ------------------------------------------------------------------------------
 # External dependencies
 # ------------------------------------------------------------------------------
-
-message(STATUS "Including dependencies.cmake file ...")
+log_status("Including dependencies.cmake file")
 include(dependencies.cmake)
 
 # ------------------------------------------------------------------------------

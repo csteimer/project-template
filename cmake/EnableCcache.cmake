@@ -46,6 +46,9 @@
 #
 # --------------------------------------------------------------------------------------------------
 
+# Include the custom message wrappers
+include(Logging)
+
 # Only define the option if not already defined (allows superprojects/toolchains to control it).
 if(NOT DEFINED ENABLE_CCACHE)
   option(ENABLE_CCACHE "Enable compiler cache (ccache/sccache) as compiler launcher" ON)
@@ -59,13 +62,13 @@ set(CCACHE_LAUNCHER
 
 # Early out if disabled.
 if(NOT ENABLE_CCACHE)
-  message(STATUS "EnableCcache: ENABLE_CCACHE=OFF, not configuring compiler launcher")
+  log_status("EnableCcache: ENABLE_CCACHE=OFF, not configuring compiler launcher")
   return()
 endif()
 
 # Don't clobber an existing launcher (e.g. set by parent project or toolchain file).
 if(DEFINED CMAKE_CXX_COMPILER_LAUNCHER OR DEFINED CMAKE_C_COMPILER_LAUNCHER)
-  message(STATUS "EnableCcache: compiler launcher already set, not overwriting")
+  log_status("EnableCcache: compiler launcher already set, not overwriting")
   return()
 endif()
 
@@ -79,11 +82,11 @@ if(NOT CCACHE_LAUNCHER)
 endif()
 
 if(NOT CCACHE_LAUNCHER)
-  message(STATUS "EnableCcache: no compiler cache found (ccache/sccache), continuing without it")
+  log_status("EnableCcache: no compiler cache found (ccache/sccache), continuing without it")
   return()
 endif()
 
-message(STATUS "EnableCcache: using compiler launcher: ${CCACHE_LAUNCHER}")
+log_status("EnableCcache: using compiler launcher: ${CCACHE_LAUNCHER}")
 
 # Set as global launcher for C and C++
 set(CMAKE_C_COMPILER_LAUNCHER

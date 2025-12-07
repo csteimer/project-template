@@ -41,6 +41,8 @@
 # --------------------------------------------------------------------------------------------------
 
 include(CheckCXXCompilerFlag)
+# Include the custom message wrappers
+include(Logging)
 
 # --- Locate IWYU once at configure time ------------------------------------------------------------
 
@@ -52,12 +54,13 @@ if(ENABLE_IWYU)
     )
 
   if(NOT IWYU_EXECUTABLE)
-    message(
-      WARNING "ENABLE_IWYU=ON but include-what-you-use was not found in PATH. "
-              "No IWYU checks will be applied."
+    log_fatal(
+      WARNING
+      "ENABLE_IWYU=ON but include-what-you-use was not found in PATH. "
+      "No IWYU checks will be applied."
       )
   else()
-    message(STATUS "Found include-what-you-use: ${IWYU_EXECUTABLE}")
+    log_status("Found include-what-you-use: ${IWYU_EXECUTABLE}")
   endif()
 endif()
 
@@ -69,11 +72,11 @@ function(enable_iwyu_for_target target)
   endif()
 
   if(NOT TARGET "${target}")
-    message(FATAL_ERROR "enable_iwyu_for_target(): target '${target}' does not exist.")
+    log_fatal("enable_iwyu_for_target(): target '${target}' does not exist.")
   endif()
 
   if(NOT IWYU_EXECUTABLE)
-    message(STATUS "IWYU executable not found — skipping IWYU for target '${target}'")
+    log_status("IWYU executable not found — skipping IWYU for target '${target}'")
     return()
   endif()
 
@@ -85,7 +88,7 @@ function(enable_iwyu_for_target target)
       # "-Xiwyu" "--no_fwd_decls"
       )
 
-  message(STATUS "Enabling IWYU for target '${target}'")
+  log_status("Enabling IWYU for target '${target}'")
 
   # Enable IWYU for this specific target
   set_property(TARGET ${target} PROPERTY CXX_INCLUDE_WHAT_YOU_USE "${iwyu_args}")
