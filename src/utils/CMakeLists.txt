@@ -1,4 +1,4 @@
-set(UTILS_LIB_SOURCES logger.cpp)
+set(UTILS_LIB_SOURCES assertions.cpp logger.cpp)
 
 set(UTILS_LIB_HEADERS assertions.hpp logger.hpp)
 

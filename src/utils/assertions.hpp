@@ -1,8 +1,7 @@
 #pragma once
 
-#include "logger.hpp"
-
 #include <cstdlib>
+#include <cstring> // for strrchr
 #include <string_view>
 
 #ifdef NDEBUG
@@ -14,26 +13,16 @@
 
 // Use spdlog's bundled fmt to avoid requiring an external fmt include path
 #include <spdlog/fmt/fmt.h>
-#include <spdlog/spdlog.h> // for shutdown()
 
 namespace project_template::utils::assert {
 
 /**
  * @brief Internal helper: logs a critical assertion failure, flushes logs, and aborts.
+ *
+ * Implemented in a .cpp file that can include logger.hpp.
  */
-inline void handle_assertion_failure(std::string_view cond, std::string_view file, int line,
-                                     std::string_view msg = {}) {
-    if (msg.empty()) {
-        LOG_CRITICAL("Assertion failed: '{}' at {}:{}", cond, file, line);
-    } else {
-        LOG_CRITICAL("Assertion failed: '{}' at {}:{} -- {}", cond, file, line, msg);
-    }
-    // Ensure all log messages are flushed before aborting
-    ::project_template::utils::log::Log::instance()->flush();
-    spdlog::shutdown();
-    std::abort();
-}
-
+[[noreturn]] void handle_assertion_failure(std::string_view cond, std::string_view file, int line,
+                                           std::string_view msg = {});
 } // namespace project_template::utils::assert
 
 #define PROJECT_TEMPLATE_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)

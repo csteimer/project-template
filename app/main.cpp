@@ -1,4 +1,5 @@
-#include "../src/utils/assertions.hpp"
+#include "assertions.hpp"
+#include "logger.hpp"
 
 #include <cstdlib>
 #include <string>
