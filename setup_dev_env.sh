@@ -20,8 +20,11 @@ source "$PYTHON_VENV/bin/activate"
 echo "Upgrading pip ..."
 pip install --upgrade pip
 
-echo "Installing Python-based development tools inside the virtual environment..."
+echo "Installing Python-based development tools inside the virtual environment ..."
 pip install pre-commit cpplint black clang-format cmakelang gcovr conan
+
+echo "Installing documentation requirements inside the virtual environment ..."
+pip install -r docs/sphinx/requirements.txt
 
 echo "Installing native dependencies via apt ..."
 sudo apt update
