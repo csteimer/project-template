@@ -1,136 +1,311 @@
 # Project Template
 
-A modern, modular C++ project template using **Conan 2**, **CMakePresets**, **GoogleTest**, **Google Benchmark**, **sanitizers**, **code coverage**, and a unified **logging + assertion** system.
-
-This template provides:
-
-- Reproducible builds with Conan profiles
-- Strict CMake configuration and toolchain integration
-- Presets for debug, sanitizers, coverage, CI, and benchmarks
-- Unified logging (spdlog) and assertion utilities
-- Doxygen documentation integration
-- Benchmark comparison tooling
-- Optional Include-What-You-Use (IWYU) analysis
-- Automated Conan package versioning with Git tag + commit tracking
+A modern C++ project template featuring a clean CMake structure, Conan 2 dependency management, built‑in
+testing and benchmarking support, and a streamlined developer environment setup. The goal is to provide a minimal but
+professional foundation that you can extend into real projects without carrying unnecessary complexity.
 
 ---
 
-# 1. Setup
+# 1. Quick Start
+
+## 1.1 Prepare the Development Environment
 
 ```bash
 ./setup_dev_env.sh
 source .venv/bin/activate
-conan profile detect
 ```
 
-This sets up:
+This script:
 
-- A Python virtual environment
-- Development tools for formatting, Doxygen, coverage, plotting, etc.
-- Conan profiles for reproducible builds
+- Recreates a fresh Python virtual environment under `.venv`
+- Installs Python‑based development tools:
+    - `pre-commit`, `cpplint`, `black`, `clang-format`, `cmakelang`, `gcovr`, `conan`
+- Installs native system dependencies via `apt`:
+    - `ninja-build`, `clang-tidy`, `cppcheck`, `ccache`, `doxygen`, `iwyu`
+- Configures `ccache` (size + directory)
+- Installs this repository’s pre‑commit hooks
 
----
+Activate the environment in future shells:
 
-# 2. CMake User Presets
-
-CMake allows separation between **project-defined presets** (`cmake/CMakePresets.json`)
-and **user-defined overrides** (`CMakeUserPresets.json`).
-
-To keep the repository clean and customizable, create a `CMakeUserPresets.json` file in the project root:
-
-```json
-{
-  "version": 4,
-
-  "include": [
-    "cmake/CMakePresets.json"
-  ],
-
-  "configurePresets": [],
-  "buildPresets": [],
-  "testPresets": []
-}
+```bash
+source .venv/bin/activate
 ```
 
-This file:
-- Inherits 100% of the presets from `cmake/CMakePresets.json`
-- Allows developers to add local presets without modifying project files
+---
+
+# 2. Install Dependencies for a Build Preset
+
+Dependency installation is handled via:
+
+```bash
+./conan/conan_install.py <preset>
+```
+
+Examples:
+
+```bash
+./conan/conan_install.py debug
+./conan/conan_install.py asan
+./conan/conan_install.py release
+```
+
+This populates `build/<preset>/generators/` with Conan toolchains and dependency
+files. The script contains detailed documentation (`--help`).
+The available options for `<preset>` corresponds to the cmake presets (see [Section 4](#4-cmake-presets)).
+
+Remark: Use the `all` argument to call `conan install` in the build directories of all build presets.
 
 ---
 
-# 3. CMake Presets and Conan Profiles
+# 3. Building the Project
 
-| CMake Preset | CMAKE_BUILD_TYPE | Sanitizers / Options      | binaryDir         | Suggested Host Profile     |
-|--------------|------------------|---------------------------|-------------------|-----------------------------|
-| debug        | Debug            | none                      | build/debug       | gcc-debug                  |
-| release      | Release          | none                      | build/release     | gcc-release                |
-| asan         | Debug            | ASAN + UBSAN              | build/asan        | gcc-debug-asan             |
-| tsan         | Debug            | TSAN                      | build/tsan        | gcc-debug-tsan             |
-| coverage     | Debug            | coverage instrumentation  | build/coverage    | gcc-debug-coverage         |
-| benchmark    | Release          | benchmarks only           | build/benchmark   | gcc-release-benchmark      |
-| ci-debug     | Debug            | Werror                    | build/ci-debug    | gcc-debug or gcc-debug-ci  |
-
-## What each preset does
-
-### **debug**
-- Standard development configuration
-- Warnings enabled, tests enabled
-- No sanitizers or coverage overhead
-  **Use this for everyday development.**
-
-### **release**
-- Optimized build with LTO
-  **Use for product-ready binaries and packaging.**
-
-### **asan**
-- AddressSanitizer + UndefinedBehaviorSanitizer
-  **Use to catch memory errors and undefined behavior.**
-
-### **tsan**
-- ThreadSanitizer
-  **Use to detect multithreading race conditions.**
-
-### **coverage**
-- `BUILD_COVERAGE=ON` + gcov instrumentation
-  **Use to generate coverage HTML reports.**
-
-### **benchmark**
-- Only benchmarks enabled
-- Provides `run-benchmark` aggregate target
-  **Use for performance regression testing.**
-
-### **ci-debug**
-- Warnings-as-errors enabled
-- Debug + tests
-  **Use for CI pipelines.**
+```bash
+cmake --preset <cmake-preset>
+cmake --build --preset <cmake-preset>
+```
 
 ---
 
-# 4. Building the Project
+# 4. CMake Presets
+
+Defined in `CMakeUserPresets.json`:
+
+| Preset      | Type    | Features                                       | Build Dir         |
+|-------------|---------|------------------------------------------------|-------------------|
+| `debug`     | Debug   | basic dev, tests enabled                       | `build/debug`     |
+| `release`   | Release | Link time optimized build                      | `build/release`   |
+| `asan`      | Debug   | AddressSanitizer + UndefinedBehavioreSanitizer | `build/asan`      |
+| `tsan`      | Debug   | ThreadSanitizer                                | `build/tsan`      |
+| `coverage`  | Debug   | gcov instrumentation + coverage target         | `build/coverage`  |
+| `benchmark` | Release | benchmark‑only build                           | `build/benchmark` |
+| `iwyu`      | Debug   | Include‑What‑You‑Use analysis                  | `build/iwyu`      |
+| `ci-debug`  | Debug   | strict warnings-as-errors                      | `build/ci-debug`  |
+
+---
+
+# 5. Project Structure
+
+```
+project-template/
+  ├── app/                  # Application executable (links internal libraries)
+  ├── cmake/                # Custom CMake helper modules (warnings, sanitizers, coverage, IWYU, benchmarks, ...)
+  ├── conan/                # Conan scripts, profiles, and automation helpers
+  ├── src/                  # Internal libraries (modular CMake targets)
+  ├── tests/                # All test suites
+  │     ├── benchmark/      # Google Benchmark sources
+  │     ├── integration/    # Integration tests (end-to-end behavior)
+  │     └── unit/           # GoogleTest unit tests (per-module testing)
+  ├── tools/                # Utility scripts (e.g., benchmark comparison tools)
+  ├── CMakeLists.txt        # Top-level CMake entry point for the entire project
+  ├── CMakeUserPresets.json # User-specific presets for configuring & building (inherits project presets)
+  ├── Doxyfile              # Doxygen configuration for generating documentation
+  ├── README.md             # Project documentation and usage guide
+  ├── conanfile.py          # Conan package recipe (dependencies, build, packaging, versioning)
+  ├── dependencies.cmake    # Central declaration of required third-party CMake dependencies
+  └── setup_dev_env.sh      # Script to setup development environment (venv + tools + apt deps)
+```
+
+---
+
+# 6. Conan Package Workflow
+
+This repository provides a helper script to **build and (optionally) upload**
+Conan packages for all or selected profiles in `conan/profiles/`.
+It uses `conan create` under the hood and automatically:
+
+- Detects the package name from the local `conanfile.py` via `conan inspect`.
+- Detects available profiles in `conan/profiles/`.
+- Builds the package for one or more **build profiles**.
+- Optionally uploads the resulting packages to a chosen **remote**.
+- Supports cross-compilation by separating **build** and **host** profiles.
+
+Run from the project root:
+
+```bash
+./conan/release_conan_packages.py --remote <remote-name>
+```
+
+The `<remote-name>` must be a configured Conan remote (see `conan remote list`).
+
+The upload step can be disabled with the `--disable-upload` flag:
+
+```bash
+# Build for all detected profiles, but do not upload anything
+./conan/release_conan_packages.py --disable-upload
+```
+
+## Common usage examples
+
+Build and upload for **all** profiles under `conan/profiles/` (host == build):
+
+```bash
+./conan/release_conan_packages.py --remote local-test
+```
+
+Build and upload for a **single** profile (e.g. `gcc-release`):
+
+```bash
+./conan/release_conan_packages.py --remote local-test --profile gcc-release
+```
+
+Build and upload for **multiple** build profiles:
+
+```bash
+./conan/release_conan_packages.py --remote local-test \
+    --profile gcc-debug --profile gcc-release
+```
+
+Cross-compilation: build with `gcc-debug`, target host profile `gcc-release`:
+
+```bash
+./conan/release_conan_packages.py --remote local-test \
+    --profile gcc-debug --host-profile gcc-release
+```
+
+If any profile or remote is missing, the script aborts with a clear error
+message to avoid publishing incomplete or misconfigured packages.
+
+
+---
+
+# 7. Testing
+
+## Unit Tests
+
+Located under: `tests/unit/`
+
+Uses GoogleTest and link against modular test libraries.
+
+Run:
+
+```bash
+ctest --preset <cmake-preset>
+```
+
+## Integration Tests
+
+Located under: `tests/integration/`
+
+## Benchmark Tests
+
+Located under: `tests/benchmark`
+
+Configure and build via `--preset benchmark`
+
+---
+
+# 8. Benchmarks & Performance Comparison
+
+This project integrates **Google Benchmark** and provides a helper script
+`tools/benchmark_runner.py` for running and comparing performance results.
+
+The script supports three workflows:
+
+---
+
+## 8.1 Run Benchmarks for the Current Working Tree
+
+This command:
+
+- Ensures Conan dependencies are installed for the `benchmark` preset
+- Configures CMake using preset `benchmark`
+- Builds benchmarks in `build/benchmark`
+- Runs the aggregate benchmark target `run-benchmark`
+- Produces JSON files such as `*_bench.json` in `build/benchmark`
+
+```bash
+./tools/benchmark_runner.py run
+```
+
+Use this before comparing results or when profiling performance manually.
+
+---
+
+## 8.2 Compare Two Benchmark Outputs
+
+The `compare-json` subcommand compares performance between:
+
+- Two individual JSON benchmark files **or**
+- Two directories containing multiple `*_bench.json` files
+
+It prints a table showing:
+
+- Baseline time
+- Current time
+- Speedup factor
+- Percentage change
+
+Example (two files):
+
+```bash
+./tools/benchmark_runner.py compare-json \
+--baseline base.json \
+--current  curr.json
+```
+
+Example (directories):
+
+```bash
+./tools/benchmark_runner.py compare-json \
+--baseline build/base/benchmark \
+--current  build/curr/benchmark
+```
+
+You can choose the metric:
+
+- `--time-key real_time` (default, wall-clock time)
+- `--time-key cpu_time` (CPU usage)
+
+---
+
+## 8.3 Compare Performance Across Two Git Commits
+
+```bash
+./tools/benchmark_runner.py compare-commits <baseline-ref> <current-ref>
+```
+
+This command:
+
+1. Creates (or reuses) isolated **git worktrees** under
+   `build/benchmark/benchmark_worktrees/<short-ref>/`
+2. Runs the full benchmark workflow (`conan install`, configure, build, run) for each commit
+3. Loads results from both worktrees
+4. Prints a detailed performance comparison table
 
 Example:
 
 ```bash
-cmake --preset debug
-cmake --build --preset debug
+./tools/benchmark_runner.py compare-commits main feature/my-optimization
 ```
 
-Run tests:
+This allows you to confirm whether a change improves performance before merging.
+
+---
+
+### 8.4 Need Help?
 
 ```bash
-ctest --test-dir build/debug --output-on-failure
+./tools/benchmark_runner.py --help
+./tools/benchmark_runner.py run --help
+./tools/benchmark_runner.py compare-json --help
+./tools/benchmark_runner.py compare-commits --help
 ```
 
 ---
 
-# 5. Code Coverage
+---
+
+# 9. Code Coverage
+
+Enable coverage instrumentation:
 
 ```bash
+./conan/conan_install.py coverage
 cmake --preset coverage
-cmake --build --preset coverage --target coverage
+cmake --build --preset coverage
 ```
 
-Open:
+Open in browser:
 
 ```
 build/coverage/coverage_report/index.html
@@ -138,194 +313,158 @@ build/coverage/coverage_report/index.html
 
 ---
 
-# 6. Running Benchmarks
+# 10. IWYU (Include-What-You-Use)
 
-```bash
-./tools/run_benchmarks.sh
-```
+IWYU helps you automatically detect missing or unnecessary `#include` directives.
+This keeps compile times low, avoids hidden dependencies,
+and ensures every file explicitly includes what it needs.
 
-Explicit build directory:
+Using a standalone preset ensures IWYU does not slow down everyday development.
 
-```bash
-BUILD_DIR=build/benchmark PRESET=benchmark ./tools/run_benchmarks.sh
-```
-
-## Benchmark comparison workflow
-
-### 1. Generate baseline on main
-
-```bash
-git checkout main
-./tools/run_benchmarks.sh
-cp build/benchmark/example_benchmark_bench.json    build/benchmark/example_benchmark_baseline.json
-```
-
-### 2. Switch to feature branch
-
-```bash
-git checkout feature/my-change
-./tools/run_benchmarks.sh
-```
-
-### 3. Compare and plot
-
-```bash
-./tools/benchmark_runner.py   --baseline build/benchmark/example_benchmark_baseline.json   --current  build/benchmark/example_benchmark_bench.json   --output   build/benchmark/benchmark_compare.png
-```
-
----
-
-# 7. Documentation Generation (Doxygen)
-
-```bash
-doxygen
-xdg-open docs/html/index.html
-```
-
----
-
-# 8. Logging System
-
-The project provides a unified logging wrapper around **spdlog**.
-
-## Initialization
-
-```cpp
-#include "utils/log/logger.hpp"
-
-int main() {
-    Log::init(
-        Level::Debug,
-        Mode::Async,
-        "[%T.%f] [%^%l%$] %v"
-    );
-}
-```
-
-## Logging macros
-
-```cpp
-LOG_TRACE("Starting system init");
-LOG_DEBUG("X = {}", x);
-LOG_INFO("Loaded '{}'", file);
-LOG_WARN("Low memory: {} MB", free_mb);
-LOG_ERROR("Failed to open '{}'", filename);
-LOG_CRITICAL("Unexpected state!");
-```
-
-Example output:
-
-```
-[23:04:05.123456] [info] [main.cpp@line:42] Loaded config 'settings.json'
-```
-
-## Clean shutdown
-
-```cpp
-Log::flush();
-Log::reset_logger();
-```
-
----
-
-# 9. Assertions
-
-```cpp
-ASSERT(x == 10);
-ASSERT_MSG(y != 0, "Invalid divisor y = {}", y);
-```
-
-### Debug build behavior
-- Logs `LOG_CRITICAL`
-- Flushes logs
-- Shuts down spdlog thread pool
-- Aborts program
-
----
-
-# 10. Conan Package Creation
-
-This project supports full `conan create` workflows.
-
-## Build a package
-
-```bash
-conan create . --profile:host=conan/profiles/gcc-release
-```
-
-Included in the package:
-
-- `lib/`, `bin/` artifacts
-- `include/` headers
-- `licenses/`
-- `metadata/git_commit.txt`
-- Conan metadata
-- Auto-generated version number
-
-## Install the package locally
-
-```bash
-conan install project-template/<version>@
-```
-
-Or in another project:
-
-```ini
-[requires]
-project-template/<version>
-```
-
----
-
-# 11. Versioning: Git-Driven Automatic Versioning
-
-Version is determined by:
-
-1. If `PKG_VERSION` is set → use it
-2. Else if `HEAD` is exactly on a Git tag → use the tag
-3. Else → version = `latest`
-
-Commit hash is stored in:
-
-```
-metadata/git_commit.txt
-```
-
----
-
-# 12. Include-What-You-Use (IWYU)
-
-Enable with:
+Run IWYU:
 
 ```bash
 cmake --preset iwyu
-```
-
-Run:
-
-```bash
 cmake --build --preset iwyu --target iwyu-all
 ```
 
 ---
 
-# 13. Repository Structure
+# 11. Logging Framework
 
-```
-project-template/
-  ├── src/
-  ├── tests/
-  ├── cmake/
-  ├── conan/
-  ├── tools/
-  ├── docs/
-  ├── CMakeLists.txt
-  ├── CMakeUserPresets.json
-  ├── conanfile.py
-  ├── README.md
-  └── ...
+`src/utils/log/logger.hpp` provides a unified `spdlog`‑based logger:
+
+- sync & async modes
+- file‑and‑line aware macros (`LOG_INFO`, `LOG_DEBUG`, …)
+- automatic flush on error/critical
+
+Example:
+
+```cpp
+Log::init(Level::Debug, Mode::Async);
+LOG_INFO("Starting application");
 ```
 
 ---
+
+# 12. Pre‑Commit Hooks
+
+Installed automatically via `setup_dev_env.sh`.
+
+Includes:
+
+- clang-format
+- black
+- whitespace & EOF checks
+- YAML formatting
+- typo detection
+
+Run manually:
+
+```bash
+pre-commit run --all-files
+```
+
+To explicitly skip all pre-commit hooks for a single commit:
+
+```bash
+git commit --no-verify -m "This commit won't run the pre-commit hooks"
+```
+
+---
+
+# 13. Static Analysis
+
+## clang-tidy
+
+Before running clang-tidy, ensure the project is configured so that a
+`compile_commands.json` exists in the build directory:
+
+```bash
+cmake --preset debug
+```
+
+### Run clang-tidy for an entire build directory
+
+```bash
+run-clang-tidy -p <build-directory>
+```
+
+Use any other preset's build directory as needed:
+
+### Run clang-tidy only on changed files
+
+Last commit:
+
+```bash
+git diff --name-only HEAD~1 -- '*.cpp' '*.cc' '*.cxx' | xargs -r run-clang-tidy -p <build-directory>
+```
+
+Against a branch:
+
+```bash
+git diff --name-only origin/main...HEAD -- '*.cpp' '*.cc' '*.cxx' \
+  | xargs -r run-clang-tidy -p <build-directory>
+```
+
+---
+
+## cppcheck
+
+**cppcheck** is a static analysis tool which can read your project’s
+`compile_commands.json` to understand include paths, compiler definitions, and
+build flags. Because cppcheck uses its own simplified preprocessor, it may
+produce false positives for:
+
+- **third-party headers** (e.g., Conan-provided libraries → `missingIncludeSystem`)
+- **complex variadic macros**, especially logging wrappers built on top of
+  **spdlog** and **fmt** (`syntaxError` during macro expansion)
+
+These diagnostics do **not** indicate real issues in the compiled code,
+so they are selectively suppressed in the examples given below.
+
+---
+
+### Run cppcheck using the compile database
+
+Use the compile database generated by CMake for a specific preset:
+
+```bash
+cppcheck \
+  --enable=all \
+  --inconclusive \
+  --std=c++20 \
+  --project=<build-directory>/compile_commands.json \
+  --suppress=missingIncludeSystem \
+  --suppress=syntaxError
+```
+ ---
+
+# 14. Doxygen
+
+Generate documentation:
+
+```bash
+doxygen
+```
+
+Output: `docs/html/index.html`
+
+---
+
+# 15. Versioning
+
+The Conan recipe automatically derives versions from:
+
+1. `PKG_VERSION` (if set), or
+2. Git tag at HEAD, otherwise
+3. `"latest"`
+
+Each package also embeds `metadata/git_commit.txt`.
+
+---
+
+If starting a new project from this template, simply delete unused modules and extend `src/` with your own library
+targets.
 
 Enjoy building clean, maintainable C++ software!
