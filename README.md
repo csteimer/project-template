@@ -96,7 +96,7 @@ Defined in `CMakeUserPresets.json`:
 |-------------|---------|------------------------------------------------|-------------------|
 | `debug`     | Debug   | basic dev, tests enabled                       | `build/debug`     |
 | `release`   | Release | Link time optimized build                      | `build/release`   |
-| `asan`      | Debug   | AddressSanitizer + UndefinedBehavioreSanitizer | `build/asan`      |
+| `asan`      | Debug   | AddressSanitizer + UndefinedBehaviourSanitizer | `build/asan`      |
 | `tsan`      | Debug   | ThreadSanitizer                                | `build/tsan`      |
 | `coverage`  | Debug   | gcov instrumentation + coverage target         | `build/coverage`  |
 | `benchmark` | Release | benchmark‑only build                           | `build/benchmark` |
