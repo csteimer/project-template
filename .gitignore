@@ -12,7 +12,6 @@ Makefile
 compile_commands.json
 CTestTestfile.cmake
 Testing/
-ConanGeneratedCMakePresets.json
 
 # === Executables / binaries ===
 *.out
@@ -32,12 +31,6 @@ ConanGeneratedCMakePresets.json
 # === Logs / temporary ===
 *.log
 *.tmp
-
-# === Test outputs ===
-test_output/
-*.gcda
-*.gcno
-*.gcov
 
 # === OS-generated files ===
 .DS_Store
