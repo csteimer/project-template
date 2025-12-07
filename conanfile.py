@@ -65,7 +65,7 @@ class Pkg(ConanFile):
 
     # Runtime Conan dependencies (propagated transitively to consumers)
     requires = (
-        "spdlog/1.13.0",
+        "spdlog/1.16.0",
         "magic_enum/0.9.5",
         "yaml-cpp/0.8.0",
     )
