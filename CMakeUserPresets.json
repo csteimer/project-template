@@ -1,0 +1,16 @@
+{
+  "version": 6,
+
+  "include": [
+    "cmake/CMakePresets.json"
+  ],
+
+  "configurePresets": [
+  ],
+
+  "buildPresets": [
+  ],
+
+  "testPresets": [
+  ]
+}

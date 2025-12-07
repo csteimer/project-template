@@ -1,0 +1,34 @@
+PROJECT_NAME           = "project_template"
+
+OUTPUT_DIRECTORY       = build
+
+GENERATE_HTML          = YES
+GENERATE_XML           = NO
+GENERATE_LATEX         = NO
+
+INPUT                  = ../../src \
+                         ../../app
+RECURSIVE              = YES
+
+EXCLUDE_PATTERNS       = ../../*build*/* \
+                         ../../tests/*
+
+# Extract all comments:
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+
+# Graphs:
+HAVE_DOT               = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+CLASS_DIAGRAMS         = YES
+COLLABORATION_GRAPH    = YES
+DOT_IMAGE_FORMAT       = png
+
+# Source browser:
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+
+# Formatting:
+FORMULA_FONTS          = YES

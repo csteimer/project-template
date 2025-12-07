@@ -32,18 +32,15 @@ Testing/
 *.log
 *.tmp
 
-# === Test outputs ===
-test_output/
-*.gcda
-*.gcno
-*.gcov
-
 # === OS-generated files ===
 .DS_Store
 Thumbs.db
 
 # === Generated Documentation ===
-docs/
+docs/doxygen/build
 
 # === Compressed files ===
 *.zip
+
+# === Auto generated dir during benchmarks ===
+.bench_worktrees/
